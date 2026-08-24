@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nas Entrelinhas</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+  :root{
+    --sw:min(52vh,480px,30vw);
+    --paper:#f3f1f6; --ink:#241f2e; --ink2:#5a5367; --mute:#9a93a6; --line:#d9d4e2;
+    --wine:#8a2b4d; --wine-soft:#f1dfe6; --slate:#3d4f7c; --slate-soft:#e1e6f2;
+    --disp:"Fraunces",Georgia,serif; --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#17131d;font-family:var(--body);color:var(--ink);overflow:hidden;user-select:none;touch-action:manipulation}
+  button{font-family:var(--body);touch-action:manipulation}
+  #game{position:relative;width:100vw;height:100vh;height:100dvh;overflow:hidden;background:#000}
+  #stage{position:absolute;inset:0;overflow:hidden}
+  #bg,#bg2{position:absolute;inset:0;transition:opacity .7s}
+  #bg svg,#bg2 svg{width:100%;height:100%;display:block}
+  #bg2{opacity:0;pointer-events:none}
+  #sprites{position:absolute;inset:0;pointer-events:none}
+  .sprite{position:absolute;bottom:0;width:var(--sw);aspect-ratio:200/320;transition:opacity .4s,transform .4s,filter .8s;opacity:0;transform:translateY(20px)}
+  .sprite.on{opacity:1;transform:translateY(0)}
+  .sprite svg{width:100%;height:100%;display:block;filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}
+  .sprite.left{left:5%}.sprite.center{left:50%;margin-left:calc(var(--sw)/-2)}.sprite.right{right:5%}
+  .sprite.dim{filter:brightness(.6)}
+  .sprite.fade1{filter:saturate(.45) brightness(.96)}
+  .sprite.fade2{filter:saturate(.08) brightness(.9) contrast(.95)}
+  .sprite.dim.fade1{filter:saturate(.45) brightness(.6)}
+  .sprite.dim.fade2{filter:saturate(.08) brightness(.55)}
+
+  /* caixa de texto */
+  #textbox{position:absolute;left:50%;bottom:3vh;transform:translateX(-50%);width:min(94vw,960px);min-height:118px;background:var(--paper);border:2px solid var(--line);border-radius:8px;padding:16px 26px 22px;box-shadow:0 10px 34px rgba(0,0,0,.35);cursor:pointer;display:none}
+  #textbox.on{display:block}
+  #nametag{position:absolute;top:-16px;left:18px;background:var(--slate);color:#fff;font-weight:700;padding:3px 12px;border-radius:4px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;display:none}
+  #nametag.on{display:inline-block}
+  #text{font-size:clamp(16px,2.3vh,21px);line-height:1.5;min-height:3em}
+  #text.narr{font-style:italic;color:var(--ink2)}
+  #text .ap{color:var(--mute);text-decoration:line-through;text-decoration-color:var(--wine);text-decoration-thickness:2px}
+  #text.voz{font-family:var(--disp);color:var(--wine);font-size:clamp(18px,2.7vh,24px)}
+  #next{position:absolute;right:16px;bottom:8px;color:var(--slate);font-size:13px;animation:bob 1s infinite;opacity:0}
+  #next.on{opacity:1}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+  #hint{position:absolute;left:12px;bottom:6px;color:#fff;opacity:.5;font-size:12px;z-index:30;pointer-events:none}
+
+  /* hud */
+  #hud{position:absolute;top:10px;right:12px;display:flex;gap:8px;z-index:45}
+  #hud button{background:rgba(243,241,246,.85);border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:5px 10px;font-size:13px;cursor:pointer}
+
+  /* sino */
+  #bell{position:absolute;top:14px;left:16px;z-index:30;color:#fff;opacity:0;pointer-events:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+  #bell.ring{animation:ring 2.6s ease-out}
+  @keyframes ring{0%{opacity:0;transform:rotate(0)}10%{opacity:.9;transform:rotate(-14deg)}20%{transform:rotate(12deg)}30%{transform:rotate(-8deg)}40%{transform:rotate(5deg)}50%{transform:rotate(0);opacity:.9}100%{opacity:0}}
+
+  /* cartão de dia */
+  #daycard{position:absolute;inset:0;z-index:38;display:flex;align-items:center;justify-content:center;background:#17131d;opacity:0;pointer-events:none;transition:opacity .6s}
+  #daycard.on{opacity:1}
+  #daycard span{font-family:var(--disp);font-size:clamp(22px,4.5vw,40px);color:#ebe6f0;text-align:center;padding:0 20px}
+
+  /* overlays */
+  .overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:20;background:rgba(23,19,29,.45);padding:20px;overflow:auto}
+  .overlay.on{display:flex}
+  #nameScreen .card,#options .card,#ask .card,#caderno .card{margin:auto}
+  #choices{flex-direction:column;gap:12px}
+  .chead{color:#fff;font-family:var(--disp);font-size:19px;text-shadow:0 2px 10px rgba(0,0,0,.6);margin-bottom:4px;text-align:center;max-width:90vw}
+  .choice{background:var(--paper);border:2px solid var(--slate);border-radius:6px;padding:13px 24px;font-size:17px;cursor:pointer;min-width:min(86vw,460px);max-width:90vw;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.3);transition:transform .1s,background .15s;color:var(--ink)}
+  .choice:hover{background:var(--slate-soft);transform:scale(1.02)}
+
+  /* confirmação própria */
+  #ask{flex-direction:column;z-index:90}
+  #ask .card{background:var(--paper);border-radius:8px;padding:24px 28px;display:flex;flex-direction:column;gap:16px;width:min(92vw,420px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+  #ask .q{font-family:var(--disp);font-size:20px;color:var(--ink);line-height:1.35}
+  #ask .row{display:flex;gap:10px}
+  #ask .row button{flex:1;padding:12px;border-radius:6px;font-size:16px;cursor:pointer}
+  #askYes{background:var(--wine);border:0;color:#fff;font-weight:700}
+  #askNo{background:#fff;border:2px solid var(--line);color:var(--ink)}
+
+  /* caderno */
+  #caderno{flex-direction:column;z-index:80}
+  #caderno .card{background:var(--paper);border-radius:8px;padding:24px 28px;display:flex;flex-direction:column;gap:12px;width:min(94vw,640px);max-height:88vh;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+  #caderno .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+  #caderno h3{font-family:var(--disp);font-size:26px;color:var(--wine)}
+  #caderno #cadCount{font-size:13px;color:var(--ink2);letter-spacing:.08em;text-transform:uppercase}
+  #caderno .sub{font-size:14px;color:var(--ink2)}
+  #cadList{overflow:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px}
+  .pat{border:1px solid var(--line);border-radius:6px;padding:10px 14px;background:#fff}
+  .pat .n{font-family:var(--disp);font-size:17px;color:var(--ink)}
+  .pat .d{font-size:14px;color:var(--ink2);margin-top:3px;line-height:1.45}
+  .pat .w{font-size:12px;color:var(--wine);margin-top:6px;letter-spacing:.04em}
+  .pat.unk{background:transparent;border-style:dashed;color:var(--mute)} .pat.unk .n{color:var(--mute);font-style:italic}
+  #caderno .go{background:var(--ink);color:#fff;border:0;border-radius:6px;font-size:15px;padding:10px 24px;cursor:pointer;align-self:flex-end}
+
+  /* ligue os pontos */
+  .quiz{margin-top:18px;padding:18px 20px;border:2px solid var(--ink);border-radius:8px;background:#fff}
+  .quiz .qn{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--wine);font-weight:700}
+  .quiz .quote{font-family:var(--disp);font-size:21px;line-height:1.3;margin:8px 0 4px}
+  .quiz .who{font-size:13px;color:var(--ink2);margin-bottom:12px}
+  .quiz .opts{display:flex;flex-direction:column;gap:8px}
+  .quiz .opts button{text-align:left;padding:11px 14px;border-radius:6px;border:1.5px solid var(--slate);background:var(--paper);cursor:pointer;font-size:15px;color:var(--ink);transition:background .12s}
+  .quiz .opts button:hover{background:var(--slate-soft)}
+  .quiz .opts button.right{background:var(--wine);border-color:var(--wine);color:#fff}
+  .quiz .opts button.wrong{opacity:.45;text-decoration:line-through}
+  .quiz .opts button.reveal{border-color:var(--wine);color:var(--wine);font-weight:700}
+  .quiz .fb{display:none;margin-top:12px;padding:12px 14px;border-left:4px solid var(--wine);background:var(--wine-soft);font-size:15px;line-height:1.5}
+  .quiz .fb.on{display:block}
+  .quiz .fb b{display:block;color:var(--wine);font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+  .quiz .fb .rec{margin-top:8px;font-style:italic;color:var(--ink2)}
+  .quiz .nxt{display:none;margin-top:12px;background:var(--ink);color:#fff;border:0;padding:10px 20px;border-radius:4px;cursor:pointer;font-size:15px}
+  .quiz .nxt.on{display:inline-block}
+
+  /* celular */
+  #phone{flex-direction:column}
+  #phone .dev{width:min(92vw,360px);height:min(78vh,620px);background:#111;border-radius:28px;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);display:flex;flex-direction:column;cursor:pointer}
+  #phone .scr{flex:1;background:#f6f4f9;border-radius:18px;display:flex;flex-direction:column;overflow:hidden}
+  #phone .hd{background:var(--slate);color:#fff;padding:12px 16px;font-weight:700;font-size:15px;display:flex;align-items:center;gap:10px}
+  #phone .hd .av{width:28px;height:28px;border-radius:50%;background:#fff4}
+  #phone .msgs{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:6px}
+  #phone .m{max-width:82%;padding:8px 12px;border-radius:14px;font-size:15px;line-height:1.35;animation:pop .2s}
+  #phone .m.me{align-self:flex-end;background:var(--slate-soft);border-bottom-right-radius:4px}
+  #phone .m.you{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
+  #phone .m.sys{align-self:center;background:transparent;color:var(--mute);font-size:12px;font-style:italic}
+  #phone .m b{color:var(--wine);font-size:12px;display:block}
+  @keyframes pop{from{transform:scale(.9);opacity:0}}
+  #phone .tap{color:#fff;opacity:.7;font-size:13px;margin-top:10px}
+
+  /* telas */
+  .screen{position:absolute;inset:0;display:none;z-index:40;overflow:auto;background:var(--paper);color:var(--ink)}
+  .screen.on{display:block}
+  #title{background:linear-gradient(160deg,#2a2236 0%,#17131d 60%,#24182a 100%);color:#ebe6f0;overflow:hidden}
+  #titleInner{position:absolute;left:7%;top:14%;max-width:560px;z-index:2}
+  #titleInner .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#e07a9c;font-weight:700}
+  #titleInner h1{font-family:var(--disp);font-size:clamp(44px,8vw,92px);line-height:1;margin:10px 0 6px;font-weight:700}
+  #titleInner h1 span{display:block;color:#7d7589;text-decoration:line-through;text-decoration-color:#e07a9c;text-decoration-thickness:3px}
+  #titleInner .sub{color:#b5adc2;font-size:17px;max-width:44ch;margin-bottom:26px}
+  #menu{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+  #menu button{background:transparent;border:1.5px solid #e07a9c;color:#ebe6f0;padding:11px 26px;font-size:17px;border-radius:4px;cursor:pointer;min-width:220px;text-align:left;transition:background .15s}
+  #menu button:hover{background:#e07a9c;color:#17131d}
+  #menu button:disabled{opacity:.35;cursor:default}
+  #titleGirls{position:absolute;right:-3%;bottom:0;height:min(76%,44vw);display:flex;align-items:flex-end;z-index:1;pointer-events:none}
+  #titleGirls .tg{height:100%;aspect-ratio:200/320;margin-left:calc(var(--ov,-70px));filter:drop-shadow(0 8px 14px rgba(0,0,0,.4))}
+  #titleGirls .tg svg{height:100%;width:100%}
+  @media (max-width:1000px){ #titleGirls{--ov:-110px;opacity:.55} }
+  #ver{position:absolute;right:14px;bottom:10px;font-size:12px;color:#7d7589}
+
+  #endChap{padding:40px 20px}
+  #endChap .inner{max-width:680px;margin:0 auto}
+  #endChap .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--wine);font-weight:700}
+  #endChap h2{font-family:var(--disp);font-size:34px;margin:6px 0 18px}
+  #endChap dl{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;font-size:16px;line-height:1.5}
+  #endChap dt{font-weight:700;color:var(--slate)}
+  #endChap .ajuda{margin-top:18px;padding:14px 16px;background:var(--wine-soft);border-left:4px solid var(--wine);font-size:15px;line-height:1.6}
+  #endChap button{margin-top:24px;background:var(--ink);color:#fff;border:0;padding:12px 26px;font-size:16px;border-radius:4px;cursor:pointer}
+
+  #nameScreen{flex-direction:column}
+  #nameScreen .card{background:var(--paper);border-radius:8px;padding:28px 32px;display:flex;flex-direction:column;gap:14px;align-items:center;min-width:min(92vw,440px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+  #nameScreen h3{font-family:var(--disp);font-size:24px;color:var(--wine)}
+  #nameScreen input{font-size:20px;padding:10px 14px;border-radius:6px;border:2px solid var(--line);width:100%;text-align:center;outline:none;font-family:var(--body)}
+  #nameScreen input:focus{border-color:var(--slate)}
+  #nameScreen .lbl{font-size:14px;color:var(--ink2)}
+  #nameScreen .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  #nameScreen .row button{background:#fff;border:2px solid var(--line);border-radius:6px;padding:8px 16px;cursor:pointer;font-size:15px;color:var(--ink)}
+  #nameScreen .row button.sel{background:var(--slate);color:#fff;border-color:var(--slate)}
+  #nameScreen .go{background:var(--wine);color:#fff;border:0;border-radius:6px;font-size:17px;padding:11px 30px;font-weight:700;cursor:pointer}
+
+  #options{flex-direction:column;z-index:80}
+  #options .card{background:var(--paper);border-radius:8px;padding:26px 30px;display:flex;flex-direction:column;gap:14px;min-width:min(92vw,440px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+  #options h3{font-family:var(--disp);font-size:24px;color:var(--wine)}
+  #options .opt{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer;font-size:16px}
+  #options .opt small{display:block;color:var(--ink2);font-size:13px}
+  #options .opt input{width:22px;height:22px;accent-color:var(--wine);cursor:pointer}
+  #options .go{background:var(--ink);color:#fff;border:0;border-radius:6px;font-size:16px;padding:10px 26px;cursor:pointer;align-self:flex-end}
+
+  #credits{position:absolute;inset:0;background:#17131d;color:#ebe6f0;display:none;z-index:70;padding:40px 24px;overflow:auto}
+  #credits.on{display:block}
+  #credits .inner{max-width:640px;margin:0 auto;text-align:center}
+  #credits h1{font-family:var(--disp);font-size:44px}
+  #credits p{margin:12px 0;line-height:1.6;color:#cfc8d8}
+  #credits .q{font-family:var(--disp);font-size:26px;color:#fff;margin:26px 0;line-height:1.3}
+  #credits .help{text-align:left;background:#211b29;border-radius:8px;padding:16px 20px;margin:20px 0;font-size:15px;line-height:1.7}
+  #credits .help b{color:#e07a9c}
+  #credits button{background:#e07a9c;color:#17131d;border:0;padding:12px 28px;font-size:16px;border-radius:4px;cursor:pointer;margin-top:10px;font-weight:700}
+
+  #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:50;transition:opacity .4s}
+  #fadeblack{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:45;transition:opacity .8s}
+  #warn{position:absolute;inset:0;background:#17131d;color:#ebe6f0;display:flex;align-items:center;justify-content:center;z-index:100;text-align:center;padding:30px;flex-direction:column;gap:16px;font-size:17px;line-height:1.6;overflow:auto}
+  @media (max-height:460px){
+    #titleInner{top:6%}
+    #titleInner h1{font-size:36px}
+    #titleInner h1 span{display:none}
+    #titleInner .sub{margin-bottom:10px;font-size:14px}
+    #menu{gap:6px}
+    #menu button{padding:7px 18px;font-size:15px;min-width:180px}
+    #warn h1{font-size:26px} #warn{font-size:14px;gap:10px}
+    #nameScreen .card{padding:16px 22px;gap:8px} #nameScreen h3{font-size:19px} #nameScreen input{font-size:17px;padding:7px 10px}
+  }
+  #warn h1{font-family:var(--disp);font-size:40px}
+  #warn .box{max-width:560px;color:#cfc8d8}
+  #warn button{background:#e07a9c;color:#17131d;border:0;padding:12px 30px;font-size:17px;border-radius:4px;cursor:pointer;font-weight:700}
+  /* celular em pé: pede pra girar */
+  #rotate{position:fixed;inset:0;z-index:200;background:#17131d;color:#ebe6f0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px;text-align:center;padding:30px}
+  #rotate .ph{width:64px;height:110px;border:4px solid #e07a9c;border-radius:12px;position:relative;animation:turn 1.8s ease-in-out infinite}
+  #rotate .ph::after{content:'';position:absolute;left:50%;bottom:6px;width:18px;height:4px;margin-left:-9px;border-radius:2px;background:#e07a9c}
+  @keyframes turn{0%,25%{transform:rotate(0)}60%,100%{transform:rotate(90deg)}}
+  #rotate p{font-size:18px;line-height:1.5;max-width:300px}
+  #rotate b{color:#e07a9c}
+  @media (orientation:portrait) and (pointer:coarse){ #rotate{display:flex} }
+  /* iPhones antigos sem suporte a aspect-ratio */
+  @supports not (aspect-ratio: 1/1){
+    .sprite{height:calc(var(--sw)*1.6)}
+    #titleGirls .tg{width:calc(min(76vh,44vw)*0.625)}
+  }
+  @media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+</style>
+</head>
+<body>
+<noscript><div style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:999;background:#17131d;color:#ebe6f0;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-family:sans-serif;line-height:1.6">Este jogo precisa de JavaScript.<br><br><b>Android:</b> toque em ⋮ → Abrir com → Chrome.<br><b>iPhone:</b> o visualizador de arquivos não roda o jogo — use o link online do jogo no Safari.<br><br>(Peça o link a quem te enviou este arquivo.)</div></noscript>
+<div id="game">
+  <div id="stage">
+    <div id="bg"></div><div id="bg2"></div>
+    <div id="sprites"></div>
+    <div id="textbox"><div id="nametag"></div><div id="text"></div><div id="next">▼</div></div>
+  </div>
+  <div id="daycard"><span id="dayTxt"></span></div>
+  <div id="bell" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 2a1 1 0 0 1 1 1v1.07A6 6 0 0 1 18 10v4l1.7 2.55A1 1 0 0 1 18.87 18H5.13a1 1 0 0 1-.83-1.45L6 14v-4a6 6 0 0 1 5-5.93V3a1 1 0 0 1 1-1zm-2 17h4a2 2 0 1 1-4 0z" fill="currentColor"/></svg></div>
+  <div id="hud">
+    <button id="btnMute" title="Som">🔊</button>
+    <button id="btnOpt" title="Opções">⚙</button>
+    <button id="btnCad" title="Caderno de Padrões">📓 caderno</button>
+    <button id="btnHome" title="Menu principal">⌂ menu</button>
+  </div>
+  <div id="hint">clique / espaço para avançar</div>
+
+  <div id="choices" class="overlay"></div>
+
+  <div id="ask" class="overlay"><div class="card">
+    <div class="q" id="askQ"></div>
+    <div class="row"><button id="askYes">Sim</button><button id="askNo">Voltar</button></div>
+  </div></div>
+
+  <div id="caderno" class="overlay"><div class="card">
+    <div class="top"><h3>Caderno de Padrões</h3><span id="cadCount"></span></div>
+    <p class="sub">Cada padrão que você reconhece no "Ligue os pontos" entra aqui — com todos os lugares onde ele apareceu.</p>
+    <div id="cadList"></div>
+    <button class="go" id="cadClose">Fechar</button>
+  </div></div>
+
+  <div id="phone" class="overlay"><div class="dev"><div class="scr"><div class="hd"><div class="av"></div><span id="phTitle"></span></div><div class="msgs" id="phMsgs"></div></div></div><div class="tap">toque para continuar</div></div>
+
+  <div id="options" class="overlay"><div class="card">
+    <h3>Opções</h3>
+    <label class="opt"><span><b>Som</b><small>música e efeitos</small></span><input type="checkbox" id="optSound" checked></label>
+    <label class="opt"><span><b>Linguagem forte</b><small>libera palavrões em algumas falas. Gírias aparecem sempre.</small></span><input type="checkbox" id="optStrong"></label>
+    <button class="go" id="optClose">Fechar</button>
+  </div></div>
+
+  <div id="nameScreen" class="overlay"><div class="card">
+    <h3>Como você quer ser chamad<span id="nmG">o</span>?</h3>
+    <input id="nameInput" maxlength="18" placeholder="Seu nome" autocomplete="off">
+    <div class="lbl">Como prefere ser tratad<span id="nmG2">o</span>?</div>
+    <div class="row" id="genderRow"><button data-g="o">Ele (o)</button><button data-g="a">Ela (a)</button><button data-g="e">Neutro (e)</button></div>
+    <button class="go" id="nameGo">Começar</button>
+  </div></div>
+
+  <div id="title" class="screen">
+    <div id="titleInner">
+      <div class="eyebrow">uma visual novel sobre violência invisível</div>
+      <h1>Nas<br>Entrelinhas<span>Entrelinhas</span></h1>
+      <div class="sub">Você acabou de se mudar. As pessoas que você vai conhecer parecem bem. Leia com atenção.</div>
+      <div id="menu">
+        <button id="mNew">Começar</button>
+        <button id="mCont">Continuar</button>
+        <button id="mOpt">Opções</button>
+        <button id="mCred">Sobre o jogo</button>
+      </div>
+    </div>
+    <div id="titleGirls"></div>
+    <div id="ver">protótipo v0.2 · arte provisória gerada por código</div>
+  </div>
+
+  <div id="endChap" class="screen"><div class="inner" id="endInner"></div></div>
+
+  <div id="credits"></div>
+  <div id="rotate"><div class="ph"></div><p><b>Gire o celular</b><br>Este jogo foi feito para a tela na horizontal.</p></div>
+  <div id="flash"></div><div id="fadeblack"></div>
+  <div id="warn">
+    <h1>Nas Entrelinhas</h1>
+    <div class="box">Este jogo trata de <b>violência psicológica</b> em relações do dia a dia — sem violência física explícita, mas com situações que podem ser difíceis.<br><br>Se alguma história parecer com a sua, ao longo do jogo há contatos de ajuda. Você não está sozinh<span id="wG">o</span>.</div>
+    <button id="warnOk">Entendi, vamos começar</button>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   NAS ENTRELINHAS v0.2 — história linear, jogador presente
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+
+/* ---------------- Estado ---------------- */
+const SAVE_KEY = 'nas_entrelinhas_v2';
+let S = defaultState();
+function defaultState(){ return { name:'', g:'o', strong:false, done:{}, sin:{}, pat:{}, cur:null, finalSeen:false }; }
+function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
+function load(){ try{ const j=localStorage.getItem(SAVE_KEY); if(j){ S=Object.assign(defaultState(), JSON.parse(j)); return true; } }catch(e){} return false; }
+
+/* ---------------- Personagens (arte provisória) ---------------- */
+const CH = {
+  isis:   {name:'Isis',   color:'#c2587a', skin:'#c68642', hair:'#2a1a12', style:'curly',  top:'#ff8c42', cloth:'hoodie', acc:['phones']},
+  gael:   {name:'Gael',   color:'#8a2b4d', skin:'#c68642', hair:'#2a1a12', style:'short',  top:'#1f6f43', cloth:'tshirt', m:true},
+  mae:    {name:'Dona Márcia', color:'#3d4f7c', skin:'#b9774f', hair:'#3a2418', style:'bun', top:'#6b5b95', cloth:'tshirt'},
+  olivia: {name:'Olívia', color:'#c2587a', skin:'#f1d2b6', hair:'#b7472a', style:'long',   top:'#222',    cloth:'tshirt', acc:['earrings','band']},
+  arthur: {name:'Arthur', color:'#8a2b4d', skin:'#e8c39e', hair:'#1a1a1a', style:'short',  top:'#2b3a6a', cloth:'polo', m:true},
+  lara:   {name:'Lara',   color:'#3d4f7c', skin:'#8d5524', hair:'#1a1a1a', style:'curly',  top:'#f2c14e', cloth:'tshirt'},
+  be:     {name:'Bê',     color:'#3d4f7c', skin:'#f1d2b6', hair:'#e0b04a', style:'pony',   top:'#ef476f', cloth:'hoodie'},
+  rafa:   {name:'Rafa',   color:'#3d4f7c', skin:'#c68642', hair:'#2a1a12', style:'short',  top:'#555',    cloth:'tshirt', m:true, acc:['phones']},
+  celine: {name:'Celine', color:'#c2587a', skin:'#8d5524', hair:'#1a1a1a', style:'long',   top:'#eeeeee', cloth:'blazer'},
+  davi:   {name:'Davi',   color:'#8a2b4d', skin:'#e8c39e', hair:'#5a5a5a', style:'short',  top:'#7aa6c2', cloth:'polo', m:true},
+  paula:  {name:'Paula',  color:'#3d4f7c', skin:'#f1d2b6', hair:'#6b3e26', style:'pony',   top:'#9bc53d', cloth:'tshirt'},
+  marta:  {name:'Dona Marta', color:'#3d4f7c', skin:'#e8c39e', hair:'#cfcfcf', style:'bun', top:'#444', cloth:'blazer', acc:['glasses']},
+  sofia:  {name:'Sofia',  color:'#c2587a', skin:'#f1d2b6', hair:'#3a2418', style:'bob',    top:'#fff',    cloth:'uniform'},
+  matheus:{name:'Matheus',color:'#8a2b4d', skin:'#c68642', hair:'#1a1a1a', style:'short',  top:'#fff',    cloth:'uniform', m:true, acc:['cap']},
+  ju:     {name:'Juliana',color:'#3d4f7c', skin:'#8d5524', hair:'#1a1a1a', style:'curly',  top:'#fff',    cloth:'uniform'},
+  irma:   {name:'Irmã da Sofia', color:'#3d4f7c', skin:'#f1d2b6', hair:'#3a2418', style:'long', top:'#5a9a8a', cloth:'tshirt'},
+  NARR:   {name:'', color:'#3d4f7c'},
+};
+
+function eyesSVG(ex, c){
+  const iris=(x,dx=0)=>`<ellipse cx="${x}" cy="127" rx="7" ry="9" fill="white"/><circle cx="${x+dx}" cy="128" r="5" fill="${c}"/><circle cx="${x+dx+2}" cy="125" r="1.8" fill="white"/>`;
+  switch(ex){
+    case 'h': return `<path d="M70 128 q10 -11 20 0" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M110 128 q10 -11 20 0" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    case 'c': return `<path d="M71 126 q9 6 18 0" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M111 126 q9 6 18 0" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    case 'x': return `<path d="M72 128 h16 M112 128 h16" stroke="#222" stroke-width="3"/>`;
+    case 'k': return `<ellipse cx="80" cy="127" rx="9" ry="11" fill="white"/><circle cx="80" cy="128" r="4" fill="${c}"/><ellipse cx="120" cy="127" rx="9" ry="11" fill="white"/><circle cx="120" cy="128" r="4" fill="${c}"/>`;
+    case 'y': case 'i': return iris(80,3)+iris(120,3);
+    default: return iris(80)+iris(120);
+  }
+}
+function browsSVG(ex){
+  if(ex==='a') return `<path d="M68 112 l22 6 M132 112 l-22 6" stroke="#222" stroke-width="3" stroke-linecap="round"/>`;
+  if(ex==='s'||ex==='i') return `<path d="M70 116 l20 -4 M130 116 l-20 -4" stroke="#222" stroke-width="3" stroke-linecap="round"/>`;
+  if(ex==='k'||ex==='t') return `<path d="M70 109 l20 -2 M130 109 l-20 -2" stroke="#222" stroke-width="3" stroke-linecap="round"/>`;
+  if(ex==='d') return `<path d="M70 113 l20 2 M130 113 l-20 2" stroke="#222" stroke-width="3" stroke-linecap="round"/>`;
+  return `<path d="M70 114 l20 -1 M130 114 l-20 -1" stroke="#222" stroke-width="2.5" stroke-linecap="round"/>`;
+}
+function mouthSVG(ex){
+  switch(ex){
+    case 'h': return `<path d="M86 152 q14 14 28 0" stroke="#b33" stroke-width="3" fill="#e66" stroke-linecap="round"/>`;
+    case 'c': return `<path d="M86 153 q14 10 28 0" stroke="#b33" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    case 's': case 'i': return `<path d="M88 160 q12 -8 24 0" stroke="#b33" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    case 'a': return `<path d="M90 158 q10 -5 20 0" stroke="#b33" stroke-width="3" fill="none"/>`;
+    case 'k': return `<ellipse cx="100" cy="157" rx="6" ry="8" fill="#b33"/>`;
+    case 'y': return `<path d="M92 155 q8 6 16 0" stroke="#b33" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    case 't': return `<path d="M90 157 h20" stroke="#b33" stroke-width="3" stroke-linecap="round"/>`;
+    case 'd': return `<path d="M90 156 q10 4 20 0" stroke="#b33" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    case 'x': return ``;
+    default: return `<path d="M92 156 q8 3 16 0" stroke="#b33" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  }
+}
+function shade(hex,amt){ const n=parseInt(hex.slice(1),16); let r=(n>>16)+amt,g=((n>>8)&255)+amt,b=(n&255)+amt; r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b)); return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1); }
+function hairSVG(c){
+  const h=c.hair, d=shade(h,-18);
+  switch(c.style){
+    case 'curly': { let back='',front=''; for(let i=0;i<14;i++){ const a=i/14*Math.PI*2; back+=`<circle cx="${100+Math.cos(a)*58}" cy="${118+Math.sin(a)*60}" r="22" fill="${d}"/>`; } for(let i=0;i<7;i++){ const x=48+i*17; front+=`<circle cx="${x}" cy="${78+(i%2)*8}" r="16" fill="${h}"/>`; } return {back:`<ellipse cx="100" cy="120" rx="66" ry="70" fill="${d}"/>`+back, front}; }
+    case 'long': return { back:`<path d="M40 120 Q38 58 100 54 Q162 58 160 120 L170 320 L30 320 Z" fill="${d}"/>`, front:`<path d="M42 120 Q42 62 100 58 Q158 62 158 120 L150 120 Q146 92 120 96 Q112 84 100 100 Q88 84 80 96 Q54 92 50 120 Z" fill="${h}"/>` };
+    case 'bob': return { back:`<path d="M42 120 Q40 60 100 56 Q160 60 158 120 L162 200 L38 200 Z" fill="${d}"/>`, front:`<path d="M42 118 Q44 64 100 60 Q156 64 158 118 L156 110 Q150 92 145 108 Q140 100 130 100 Q118 96 110 104 Q100 92 92 104 Q82 98 70 102 Q60 96 55 110 Q48 96 44 110 Z" fill="${h}"/>` };
+    case 'bun': return { back:`<circle cx="100" cy="62" r="22" fill="${d}"/><ellipse cx="100" cy="118" rx="58" ry="62" fill="${d}"/>`, front:`<path d="M44 120 Q46 64 100 60 Q154 64 156 120 L150 118 Q140 96 100 92 Q60 96 50 118 Z" fill="${h}"/>` };
+    case 'pony': return { back:`<ellipse cx="100" cy="118" rx="58" ry="62" fill="${d}"/><path d="M150 100 Q185 130 170 220 Q160 160 140 130 Z" fill="${d}"/>`, front:`<path d="M44 120 Q46 62 100 58 Q154 62 156 120 L150 116 Q140 92 112 100 Q104 88 96 100 Q68 92 50 116 Z" fill="${h}"/>` };
+    default: return { back:`<ellipse cx="100" cy="112" rx="58" ry="56" fill="${d}"/>`, front:`<path d="M42 118 Q44 58 100 56 Q156 58 158 118 L152 112 Q150 86 128 90 Q116 80 100 92 Q84 80 72 90 Q50 86 48 112 Z" fill="${h}"/>` };
+  }
+}
+function clothSVG(c){
+  const w = c.m? 14:0, top=c.top;
+  const torso=`<path d="M${55-w} 320 L${62-w} 205 Q100 178 ${138+w} 205 L${145+w} 320 Z" fill="${top}" stroke="${shade(top,-25)}"/>`;
+  const arms=`<path d="M${45-w} 320 L${50-w} 240 L${62-w} 205 L${70-w} 260 L${60-w} 320Z" fill="${shade(top,-12)}"/><path d="M${155+w} 320 L${150+w} 240 L${138+w} 205 L${130+w} 260 L${140+w} 320Z" fill="${shade(top,-12)}"/>`;
+  let extra='';
+  if(c.cloth==='uniform') extra=`<path d="M${62-w} 205 L100 230 L${138+w} 205 L${132+w} 200 L100 220 L${68-w} 200 Z" fill="#2b3a6a"/><path d="M92 228 l8 -8 l8 8 l-8 10z" fill="#c2587a"/>`;
+  if(c.cloth==='polo') extra=`<path d="M${82-w/2} 200 L100 222 L${118+w/2} 200 L${112+w/2} 196 L100 212 L${88-w/2} 196Z" fill="${shade(top,-40)}"/>`;
+  if(c.cloth==='blazer') extra=`<path d="M${62-w} 205 L100 300 L${138+w} 205 L${128+w} 205 L100 270 L${72-w} 205Z" fill="#f6f4f9"/><path d="M${62-w} 205 L${72-w} 205 L100 270 L100 300Z" fill="${shade(top,-30)}"/><path d="M${138+w} 205 L${128+w} 205 L100 270 L100 300Z" fill="${shade(top,-30)}"/>`;
+  if(c.cloth==='hoodie') extra=`<path d="M${70-w} 205 Q100 240 ${130+w} 205 Q100 225 ${70-w} 205Z" fill="${shade(top,-30)}"/><path d="M96 230 v40 M104 230 v40" stroke="${shade(top,-40)}" stroke-width="3"/>`;
+  if(c.acc&&c.acc.includes('band')&&!(c._lvl>=2)) extra+=`<text x="100" y="268" font-size="14" text-anchor="middle" fill="#fff" font-family="monospace" font-weight="bold">ROCK</text>`;
+  return torso+arms+extra;
+}
+function accSVG(c, ex, lvl){
+  let s=''; let a=c.acc||[];
+  if(lvl>=2) a=a.filter(x=>x!=='earrings'&&x!=='band');
+  if(a.includes('glasses')) s+=`<circle cx="80" cy="128" r="13" fill="none" stroke="#333" stroke-width="2.5"/><circle cx="120" cy="128" r="13" fill="none" stroke="#333" stroke-width="2.5"/><path d="M93 128 h14" stroke="#333" stroke-width="2.5"/>`;
+  if(a.includes('earrings')) s+=`<circle cx="46" cy="150" r="6" fill="none" stroke="#d4af37" stroke-width="3"/><circle cx="154" cy="150" r="6" fill="none" stroke="#d4af37" stroke-width="3"/>`;
+  if(a.includes('phones')) s+=`<path d="M62 200 Q100 235 138 200" stroke="#222" stroke-width="8" fill="none" stroke-linecap="round"/><circle cx="62" cy="200" r="9" fill="#333"/><circle cx="138" cy="200" r="9" fill="#333"/>`;
+  if(a.includes('cap')) s+=`<path d="M42 100 Q50 50 100 48 Q150 50 158 100 Z" fill="#c0392b"/><path d="M40 100 L175 104 L172 114 L40 110Z" fill="#a93226"/>`;
+  return s;
+}
+function spriteSVG(k, ex='n', lvl=0){
+  const c=Object.assign({},CH[k],{_lvl:lvl}); const h=hairSVG(c);
+  const blush=(ex==='h'||ex==='y')?`<circle cx="66" cy="142" r="7" fill="#ff9ab5" opacity=".45"/><circle cx="134" cy="142" r="7" fill="#ff9ab5" opacity=".45"/>`:'';
+  return `<svg viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">${h.back}${clothSVG(c)}<rect x="90" y="165" width="20" height="30" fill="${shade(c.skin,-12)}"/><circle cx="100" cy="120" r="56" fill="${c.skin}"/>${blush}${browsSVG(ex)}${eyesSVG(ex,'#3a2a20')}${mouthSVG(ex)}${h.front}${accSVG(c,ex,lvl)}</svg>`;
+}
+
+/* ---------------- Cenários ---------------- */
+const W=1600,H=900;
+function room(wall, floor, extra=''){ return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice"><rect width="${W}" height="${H}" fill="${wall}"/><rect y="610" width="${W}" height="290" fill="${floor}"/><rect y="600" width="${W}" height="14" fill="${shade(floor,-30)}"/>${extra}</svg>`; }
+function window_(x,y,w,h,sky='#bfe6ff'){ return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${sky}" stroke="#fff" stroke-width="14"/><path d="M${x+w/2} ${y}v${h}M${x} ${y+h/2}h${w}" stroke="#fff" stroke-width="10"/>`; }
+function door(x,label,col='#a87a4a'){ return `<rect x="${x}" y="300" width="170" height="310" fill="${col}" stroke="${shade(col,-30)}" stroke-width="6"/><circle cx="${x+140}" cy="460" r="8" fill="#ddd"/><rect x="${x+55}" y="330" width="60" height="26" fill="#eee"/><text x="${x+85}" y="350" font-size="20" text-anchor="middle" font-family="sans-serif" fill="#333">${label}</text>`; }
+function table(x,y,w,col='#c9945a'){ return `<rect x="${x}" y="${y}" width="${w}" height="26" fill="${col}"/><rect x="${x+20}" y="${y+26}" width="26" height="130" fill="${shade(col,-20)}"/><rect x="${x+w-46}" y="${y+26}" width="26" height="130" fill="${shade(col,-20)}"/>`; }
+function tree(x,y,s=1){ return `<rect x="${x-12*s}" y="${y-80*s}" width="${24*s}" height="${120*s}" fill="#6b4a2a"/><circle cx="${x}" cy="${y-120*s}" r="${70*s}" fill="#4f9d4f"/><circle cx="${x-45*s}" cy="${y-90*s}" r="${50*s}" fill="#5fae5f"/><circle cx="${x+45*s}" cy="${y-95*s}" r="${55*s}" fill="#449344"/>`; }
+function outside(sky1,sky2,ground,extra=''){ return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky1}"/><stop offset="1" stop-color="${sky2}"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#g)"/><rect y="620" width="${W}" height="280" fill="${ground}"/>${extra}</svg>`; }
+const BG = {
+  quartoIsis: ()=>room('#e9d8f0','#b58a6a', window_(1000,110,420,320,'#1f2750')+`<circle cx="1280" cy="200" r="40" fill="#fff4c2"/><rect x="120" y="420" width="600" height="190" fill="#c2587a" rx="16"/><rect x="140" y="380" width="200" height="70" fill="#fff" rx="12"/><rect x="100" y="200" width="160" height="200" fill="#fff" opacity=".8"/><rect x="110" y="210" width="140" height="30" fill="#ff8c42"/><rect x="110" y="250" width="140" height="30" fill="#3aa0a0"/><rect x="110" y="290" width="140" height="30" fill="#6b5b95"/>`),
+  cozinha: ()=>room('#f7efd9','#9aa3ad', window_(160,120,360,260)+table(560,470,620,'#d9a86a')+`<rect x="1280" y="220" width="220" height="400" fill="#ddd"/><rect x="1290" y="230" width="200" height="120" fill="#bbb"/><rect x="600" y="380" width="60" height="90" fill="#eee"/><rect x="700" y="380" width="60" height="90" fill="#eee"/><rect x="1040" y="380" width="60" height="90" fill="#eee"/>`),
+  patio: ()=>outside('#8fd3ff','#eaf6ff','#9bc53d', tree(250,620,1.3)+tree(1350,620,1.1)+`<rect x="500" y="520" width="600" height="30" fill="#c9945a"/><rect x="520" y="550" width="24" height="70" fill="#b07d45"/><rect x="1056" y="550" width="24" height="70" fill="#b07d45"/><rect x="0" y="300" width="${W}" height="320" fill="#f1d2b6" opacity=".35"/>`),
+  corredor: ()=>room('#e8eef7','#cfd6e0', [0,1,2,3,4,5,6,7].map(i=>`<rect x="${80+i*190}" y="260" width="150" height="350" fill="${i%2?'#7aa6c2':'#6b93b0'}" stroke="#4f7791" stroke-width="4"/><rect x="${180+i*190}" y="420" width="20" height="8" fill="#333"/>`).join('')),
+  lanchonete: ()=>room('#fff1e0','#d9534f', `<rect x="100" y="380" width="1400" height="40" fill="#444"/><rect x="100" y="420" width="1400" height="190" fill="#8a3a3a"/>`+[0,1,2,3].map(i=>`<circle cx="${350+i*300}" cy="540" r="40" fill="#d9534f" stroke="#333" stroke-width="6"/>`).join('')+`<rect x="200" y="120" width="500" height="180" fill="#fff" stroke="#d9534f" stroke-width="10"/><text x="450" y="230" font-size="70" text-anchor="middle" font-family="cursive" fill="#d9534f">Lanches</text>`),
+  festa: ()=>`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice"><rect width="${W}" height="${H}" fill="#12081c"/>${[...Array(40)].map(()=>`<circle cx="${rnd(0,W)}" cy="${rnd(0,H)}" r="${rnd(30,120)}" fill="${['#e07a9c','#5c6bc0','#9bc53d','#f2c14e'][rnd(0,3)]}" opacity=".18"/>`).join('')}<rect y="640" width="${W}" height="260" fill="#1f1030"/></svg>`,
+  praca: ()=>outside('#ffb37a','#ffe9cf','#6f9e4a', tree(200,640,1.4)+tree(1450,640,1.2)+`<circle cx="1200" cy="200" r="80" fill="#ffd36b" opacity=".9"/><rect x="560" y="520" width="480" height="28" fill="#6b4a2a"/><rect x="580" y="548" width="22" height="80" fill="#5a3a1a"/><rect x="998" y="548" width="22" height="80" fill="#5a3a1a"/><rect x="0" y="560" width="${W}" height="60" fill="#8fb36b"/>`),
+  predio: ()=>room('#efeae4','#8a8079', door(180,'401')+door(700,'402')+door(1220,'403')+`<rect x="0" y="500" width="${W}" height="6" fill="#b9b0a8"/>`),
+  salaCeline: (ok)=>room('#f3efe7','#c8a27c', window_(1050,120,400,300)+`<rect x="120" y="420" width="640" height="190" fill="#5a7d8a" rx="20"/><rect x="140" y="380" width="600" height="60" fill="#6d94a3" rx="14"/>`+(ok?`<rect x="880" y="520" width="120" height="90" fill="#fff" stroke="#ddd"/><rect x="300" y="150" width="260" height="180" fill="#ddd" stroke="#aaa" stroke-width="8"/>`:`<rect x="880" y="470" width="200" height="140" fill="#d9a86a"/><rect x="920" y="400" width="160" height="90" fill="#c9945a"/><text x="980" y="545" font-size="28" text-anchor="middle" font-family="sans-serif" fill="#5a3a1a">CAIXAS</text>`)),
+  hall: ()=>room('#e6e1da','#bfb6a8', `<rect x="600" y="200" width="400" height="410" fill="#888" stroke="#555" stroke-width="8"/><rect x="610" y="210" width="185" height="390" fill="#aab"/><rect x="805" y="210" width="185" height="390" fill="#aab"/><rect x="760" y="150" width="80" height="30" fill="#333"/><circle cx="800" cy="165" r="8" fill="#e07a9c"/><rect x="150" y="420" width="120" height="190" fill="#8b6b4a"/><circle cx="210" cy="400" r="80" fill="#4f9d4f"/><rect x="1300" y="420" width="120" height="190" fill="#8b6b4a"/><circle cx="1360" cy="400" r="80" fill="#4f9d4f"/>`),
+  escada: ()=>room('#e8eef7','#cfd6e0', [0,1,2,3,4,5].map(i=>`<rect x="${700+i*120}" y="${600-i*70}" width="900" height="70" fill="${i%2?'#b9c2d0':'#aab4c4'}"/>`).join('')+`<rect x="700" y="180" width="20" height="430" fill="#556"/>`),
+  cantina: ()=>room('#fff7e6','#d9c9a8', table(150,470,500)+table(950,470,500)+`<rect x="0" y="180" width="${W}" height="60" fill="#f2c14e"/><text x="800" y="224" font-size="40" text-anchor="middle" font-family="sans-serif" fill="#5a3a1a">CANTINA</text>`),
+  black: ()=>`<svg viewBox="0 0 16 9"><rect width="16" height="9" fill="#000"/></svg>`,
+  final: ()=>outside('#ffd6e7','#fff7fb','#e9e6ef',''),
+};
+
+/* ---------------- Áudio ---------------- */
+let AC=null, muted=false, musicTimer=null;
+function audioInit(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended') AC.resume(); }
+function tone(f,dur=.3,type='sine',vol=.06){ if(!AC||muted) return; const o=AC.createOscillator(),g=AC.createGain(); o.type=type;o.frequency.value=f; g.gain.setValueAtTime(vol,AC.currentTime); g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+dur); o.connect(g).connect(AC.destination); o.start(); o.stop(AC.currentTime+dur); }
+function sfx(k){ if(k==='click') tone(660,.05,'triangle',.015); if(k==='ok'){tone(523,.15,'triangle',.04);setTimeout(()=>tone(784,.3,'triangle',.04),120);} if(k==='voz'){tone(880,.5,'sine',.04);} if(k==='right'){tone(659,.12,'triangle',.04);setTimeout(()=>tone(988,.35,'triangle',.04),110);} if(k==='wrong'){tone(220,.35,'triangle',.035);} }
+function bellSound(){ if(!AC||muted) return; const t0=AC.currentTime; [[880,.05,2.6],[1760,.022,1.8],[2637,.012,1.2],[3520,.006,.8]].forEach(([f,v,d])=>{ const o=AC.createOscillator(),g=AC.createGain(); o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(v,t0+.012); g.gain.exponentialRampToValueAtTime(.0001,t0+d); o.connect(g).connect(AC.destination); o.start(t0); o.stop(t0+d+.05); }); }
+function bell(){ bellSound(); const b=$('#bell'); b.classList.remove('ring'); void b.offsetWidth; b.classList.add('ring'); }
+const PAD=[[261.6,0],[329.6,2],[392,4],[329.6,6],[293.7,8],[349.2,10],[440,12],[349.2,14]];
+function music(on){ clearInterval(musicTimer); if(!on||!AC) return; let step=0; musicTimer=setInterval(()=>{ if(muted){step++;return;} const s=step%16; const n=PAD.find(m=>m[1]===s); if(n) tone(n[0]/2, 1.6,'sine',.035); if(s%8===0) tone(130.8,3,'triangle',.025); step++; },500); }
+$('#btnMute').onclick=()=>{ muted=!muted; $('#btnMute').textContent=muted?'🔇':'🔊'; };
+
+/* ---------------- Render ---------------- */
+const sprites={};
+function setBG(key,arg){ const html=BG[key](arg); const b=$('#bg'),b2=$('#bg2'); b2.innerHTML=html; b2.style.opacity=1; setTimeout(()=>{ b.innerHTML=html; b2.style.opacity=0; },750); }
+function show(k,ex='n',pos){ let el=sprites[k]; if(!el){ el=document.createElement('div'); el.className='sprite'; el.dataset.k=k; $('#sprites').appendChild(el); sprites[k]=el; } el.classList.remove('left','center','right'); el.classList.add(pos||el.dataset.pos||'center'); el.dataset.pos=pos||el.dataset.pos||'center'; el.dataset.ex=ex; el.innerHTML=spriteSVG(k,ex,+(el.dataset.lvl||0)); requestAnimationFrame(()=>el.classList.add('on')); }
+function hide(k){ if(k==='all'){ Object.keys(sprites).forEach(hide); return; } const el=sprites[k]; if(el) el.classList.remove('on'); }
+function focus(k){ Object.values(sprites).forEach(el=>el.classList.toggle('dim', !!k && el.dataset.k!==k && el.classList.contains('on'))); }
+function fade(k,lvl){ let el=sprites[k]; if(!el){ el=document.createElement('div'); el.className='sprite center'; el.dataset.k=k; el.dataset.pos='center'; el.dataset.ex='n'; $('#sprites').appendChild(el); sprites[k]=el; } el.classList.remove('fade1','fade2'); if(lvl) el.classList.add('fade'+lvl); el.dataset.lvl=lvl||0; el.innerHTML=spriteSVG(k, el.dataset.ex||'n', lvl||0); }
+function fmt(t){ return t.replace(/\{nome\}/g,S.name||'você').replace(/\{g\}/g,S.g).replace(/\{s:([^|}]*)\|([^}]*)\}/g,(m,a,b)=>S.strong?b:a); }
+
+let typing=false, skipType=false, waitClick=null, lastAdvance=0;
+let erased=[];
+async function say(k,text,opts={}){
+  const box=$('#textbox'),tag=$('#nametag'),tx=$('#text'),nx=$('#next');
+  box.classList.add('on'); nx.classList.remove('on'); tx.classList.toggle('voz',!!opts.voz);
+  if(k==='P'){ tag.classList.add('on'); tag.textContent=S.name||'Você'; tag.style.background='#3d4f7c'; tx.classList.remove('narr'); focus(null); }
+  else if(k&&k!=='NARR'){ tag.classList.add('on'); tag.textContent=CH[k].name; tag.style.background=CH[k].color; tx.classList.remove('narr'); focus(k); }
+  else { tag.classList.remove('on'); tx.classList.add('narr'); focus(null); }
+  const t=fmt(text);
+  const segs=[]; t.split('~').forEach((s,i)=>{ if(s) segs.push({s, ap:i%2===1}); });
+  segs.filter(x=>x.ap).forEach(x=>{ if(!erased.includes(x.s)) erased.push(x.s); });
+  tx.innerHTML=''; typing=true; skipType=false;
+  const spans=segs.map(sg=>{ const sp=document.createElement('span'); if(sg.ap) sp.className='ap'; tx.appendChild(sp); return sp; });
+  const speed=opts.slow?60:22;
+  outer: for(let i=0;i<segs.length;i++){ const sg=segs[i]; for(let j=0;j<sg.s.length;j++){ if(skipType){ spans.forEach((sp,q)=>sp.textContent=segs[q].s); break outer; } spans[i].textContent+=sg.s[j]; if(j%3===0&&sg.s[j]!==' ') tone(k==='P'?420:(k&&k!=='NARR'?(CH[k].m?300:480):400),.03,'square',.004); await sleep(sg.s[j]==='.'?speed*5:speed); } }
+  typing=false; nx.classList.add('on');
+  if(opts.bell) setTimeout(bell,350);
+  await new Promise(r=>waitClick=r); waitClick=null;
+}
+function busy(){ return ['#choices','#phone','#nameScreen','#options','#caderno','#ask'].some(s=>$(s).classList.contains('on')) || ['#title','#endChap'].some(s=>$(s).classList.contains('on')) || $('#credits').classList.contains('on') || getComputedStyle($('#rotate')).display!=='none'; }
+function advance(){ if(busy()) return; const now=Date.now(); if(now-lastAdvance<180) return; lastAdvance=now; if(typing){ skipType=true; return; } if(waitClick){ sfx('click'); waitClick(); } }
+$('#textbox').onclick=advance; $('#stage').onclick=e=>{ if(e.target.closest('#textbox')) return; advance(); };
+document.addEventListener('keydown',e=>{ if(e.code==='Space'||e.code==='Enter'){ const a=document.activeElement; if(a&&(a.tagName==='INPUT'||a.tagName==='BUTTON'||a.tagName==='LABEL')) return; e.preventDefault(); advance(); } });
+document.querySelectorAll('#hud button').forEach(b=>b.addEventListener('click',()=>b.blur()));
+let lastWheel=0; document.addEventListener('wheel',e=>{ if(e.deltaY<=0) return; const now=Date.now(); if(now-lastWheel<450) return; lastWheel=now; advance(); },{passive:true});
+
+function choice(opts){ return new Promise(res=>{ const ov=$('#choices'); ov.innerHTML=''; ov.classList.add('on'); $('#next').classList.remove('on'); const h=document.createElement('div'); h.className='chead'; h.textContent=`E agora, ${S.name} — o que você faz?`; ov.appendChild(h); opts.forEach((o,i)=>{ const b=document.createElement('button'); b.className='choice'; b.textContent=fmt(o); b.onclick=()=>{ sfx('click'); ov.classList.remove('on'); res(i); }; ov.appendChild(b); }); }); }
+async function fx(kind){ if(kind==='flash'){ $('#flash').style.opacity=1; await sleep(150); $('#flash').style.opacity=0; await sleep(400);} if(kind==='fadeout'){ $('#fadeblack').style.opacity=1; await sleep(900);} if(kind==='fadein'){ $('#fadeblack').style.opacity=0; await sleep(900);} }
+async function showDay(t){ const d=$('#daycard'); $('#dayTxt').textContent=t; $('#textbox').classList.remove('on'); d.classList.add('on'); await sleep(1900); d.classList.remove('on'); await sleep(500); }
+
+function phone(title,msgs){ return new Promise(res=>{ const ov=$('#phone'),list=$('#phMsgs'); $('#phTitle').textContent=title; list.innerHTML=''; ov.classList.add('on'); $('#textbox').classList.remove('on'); let i=0; const step=()=>{ if(i<msgs.length){ const [who,txt]=msgs[i++]; const d=document.createElement('div'); d.className='m '+who; d.innerHTML=fmt(txt); list.appendChild(d); list.scrollTop=list.scrollHeight; sfx('click'); } else { ov.onclick=null; ov.classList.remove('on'); res(); } }; step(); ov.onclick=step; }); }
+
+/* ---------------- Padrões ---------------- */
+const PATTERNS = {
+  cuidado:  {n:'Cuidado que invade',        d:'"Eu só tô cuidando" — dito enquanto entra sem bater, lê o celular, decide pelo outro. Cuidado de verdade pede; controle pega.'},
+  recado:   {n:'Recado só pra ela',         d:'Uma frase inocente para quem está em volta e uma ameaça para uma pessoa só. Ninguém vê — e é essa a intenção.'},
+  arma:     {n:'Segredo como arma',         d:'Algo contado em confiança vira moeda: "se eu quisesse, contava". Não precisa contar. Ameaçar já basta.'},
+  culpa:    {n:'Culpa como coleira',        d:'"Se você gostasse de mim…" A responsabilidade pela reação dele é empurrada pra ela.'},
+  elogio:   {n:'Crítica vestida de elogio', d:'"Fica mais bonita natural." Parece carinho, funciona como correção. É assim que começa.'},
+  proibir:  {n:'Proibir sem proibir',       d:'"Não tô proibindo, só tô dizendo que não gosto." A decisão continua dele; a culpa, dela.'},
+  menos:    {n:'Uma pessoa a menos',        d:'Primeiro as amigas, depois os colegas. Cada pessoa afastada é uma pessoa a menos pra perceber.'},
+  medida:   {n:'Reclamação sem medida',     d:'A reclamação é maior que o motivo — e vem sempre. Não é sobre o barulho; é sobre a pessoa.'},
+  assunto:  {n:'A vida dela vira assunto',  d:'Horário, estado civil, visitas. Nada disso é da conta dele — e o "brincadeira" tira dela o direito de se incomodar.'},
+  plateia:  {n:'Piada com plateia',         d:'O constrangimento precisa de público. Quem ouve não viu nada, mas agora "ouviu falar".'},
+  boato:    {n:'Boato com cara de cuidado', d:'"Dizem que tem mais coisa, mas não vou expor ninguém." Difamação assinada como preocupação.'},
+  exagero:  {n:'"Você tá exagerando"',      d:'Desqualificar o que a pessoa sentiu pra ela duvidar — e calar. É o mais invisível de todos.'},
+  padrao:   {n:'Uma vez é piada, toda vez é padrão', d:'Isolada, a frase parece bobagem. Repetida, é um sistema — e o sistema tem dono.'},
+};
+
+const CHAPTERS = {
+  c1:{ title:'Isis e Gael', sub:'entre irmãos', prot:'isis', start:'c1_1', next:'c2',
+    sinais:[
+      {id:'c1s1',p:'cuidado',who:'Gael, irmão da Isis',q:'"Relaxa, visita. Eu só tô cuidando dela." — depois de pegar o celular dela sem pedir'},
+      {id:'c1s2',p:'recado',who:'Gael, no jantar',q:'"A Isis anda bem distraída ultimamente. Né, Isis?"'},
+      {id:'c1s3',p:'arma',who:'Gael, recontado pela Isis',q:'"Se você não me obedecer, os nossos pais vão saber de tudo. Você que vai me obrigar."'},
+      {id:'c1s4',p:'menos',who:'Gael, para VOCÊ, no corredor',q:'"Se ela te falar alguma coisa estranha, você me conta, né? A gente cuida dela juntos."'}],
+    fim:{nome:'Violência psicológica entre irmãos: invasão de privacidade, controle e chantagem emocional.', porque:'Não precisa de tapa. Usar um segredo confiado para obrigar alguém a obedecer é coerção. "Estou cuidando" não anula o medo que a pessoa sente.', ajuda:'Estar por perto, como você esteve. Não fazer cara de pena. Lembrar a pessoa de que o segredo continua sendo dela — e apoiar a conversa com um adulto de confiança.', onde:'Disque 100 (Direitos Humanos) · Conselho Tutelar · orientação educacional da escola · CVV 188.'} },
+  c2:{ title:'Olívia e Arthur', sub:'no namoro', prot:'olivia', start:'c2_1', next:'c3',
+    sinais:[
+      {id:'c2s1',p:'elogio',who:'Arthur, namorado da Olívia',q:'"Você fica ainda mais bonita natural, sem tanta coisa no rosto."'},
+      {id:'c2s2',p:'culpa',who:'Arthur, por mensagem',q:'"se vc gostasse de mim de verdade preferia ficar comigo. mas tudo bem"'},
+      {id:'c2s4',p:'menos',who:'Arthur, sobre o grupo de trabalho',q:'"Então troca de grupo. Se eu sou importante pra você, troca."'},
+      {id:'c2s3',p:'proibir',who:'Arthur, na festa',q:'"Eu não tô proibindo, tá? Só tô dizendo que não gosto. Mas você faz o que quiser."'},
+      {id:'c2s5',p:'exagero',who:'Arthur, recontado pela Olívia',q:'"Você tá exagerando. Eu faço tudo isso porque te amo."'},
+      {id:'c2s6',p:'recado',who:'Arthur, por mensagem, para VOCÊ',q:'"vc é gente boa. mas não enche a cabeça da Olívia com ideia, falou? confio em vc 👊"'}],
+    fim:{nome:'Relacionamento abusivo: controle, manipulação por culpa e isolamento. A lei reconhece isso como violência psicológica (Lei Maria da Penha, art. 7º, II).', porque:'Não houve um grito. Houve uma pessoa que foi diminuindo até caber no que o outro queria. Ciúme não é prova de amor; controle não é cuidado.', ajuda:'Ficar por perto mesmo quando a pessoa se afasta; não julgar; devolver a ela as próprias perguntas ("quando foi a última vez que você escolheu sem medo?").', onde:'Ligue 180 (Central de Atendimento à Mulher) · Disque 100 · CVV 188 · orientação da escola.'} },
+  c3:{ title:'Sofia e Matheus', sub:'na amizade', prot:'sofia', start:'c3_1', next:'c4',
+    sinais:[
+      {id:'c3s1',p:'arma',who:'Matheus, melhor amigo da Sofia',q:'"Se eu quisesse, podia contar pra todo mundo o que você me falou, sabia? Brincadeira."'},
+      {id:'c3s2',p:'padrao',who:'Matheus, várias vezes',q:'"Se eu quisesse…" / "Lembra que eu sei de…?" / (só olha pra ela)'},
+      {id:'c3s3',p:'plateia',who:'Matheus, na cantina',q:'"Conta pra eles por que você sumiu, Sofia. Ah, não… é segredo, né?"'}],
+    fim:{nome:'Chantagem emocional e quebra de confiança dentro de uma amizade.', porque:'Confiança não é dívida. Quem usa um segredo para conseguir o que quer — mesmo sem nunca contar — está controlando a outra pessoa pelo medo.', ajuda:'Validar o que a pessoa sente ("isso não é brincadeira"); lembrar que o segredo continua sendo dela; apoiar, se for seguro, que ela tire o poder da ameaça falando primeiro.', onde:'Orientação educacional da escola · Disque 100 · CVV 188 · Conselho Tutelar.'} },
+  c4:{ title:'Celine e Davi', sub:'entre vizinhos', prot:'celine', start:'c4_1', next:'final',
+    sinais:[
+      {id:'c4s1',p:'medida',who:'Davi, do 401',q:'TOC. TOC. TOC. na parede — sábado, 21h, música baixa'},
+      {id:'c4s2',p:'assunto',who:'Davi, no elevador',q:'"Chegando tarde de novo, hein, Celine? Moça solteira é assim mesmo."'},
+      {id:'c4s3',p:'plateia',who:'Davi, no hall',q:'"Cuidado com essa daí, Paula. Já vi de tudo entrando naquele apartamento. Brincadeira!"'},
+      {id:'c4s4',p:'boato',who:'Davi, no grupo do condomínio',q:'"e dizem que tem mais coisa, mas não vou falar aqui pra não expor ninguém 🙏"'},
+      {id:'c4s5',p:'exagero',who:'Davi, no corredor',q:'"Você tá levando tudo pro lado errado. Eu só tô brincando."'},
+      {id:'c4s6',p:'cuidado',who:'Davi, na SUA porta',q:'"Você parece sensato. Me ajuda a botar ordem. Eu cuido desse prédio como se fosse meu."'}],
+    fim:{nome:'Assédio e violência psicológica na vizinhança: perturbação, constrangimento, difamação e gaslighting ("você está exagerando").', porque:'Espalhar boatos é difamação (crime). Comentários repetidos sobre a vida pessoal são assédio. Fazer alguém duvidar do que sente é violência psicológica — prevista em lei (art. 147-B do Código Penal).', ajuda:'Testemunhar — dizer "eu moro ao lado e nunca ouvi barulho" muda tudo; ajudar a registrar (datas, prints); acionar a administração junto com a pessoa.', onde:'Ligue 180 · Delegacia (registro de ocorrência) · Disque 100 · Defensoria Pública.'} },
+};
+function patternPlaces(pid){ const out=[]; Object.entries(CHAPTERS).forEach(([cid,c],i)=>c.sinais.forEach(s=>{ if(s.p===pid) out.push({chap:i+1,who:s.who.split(',')[0],title:c.title}); })); return out; }
+function notePattern(pid, cid){ S.pat=S.pat||{}; if(!S.pat[pid]) S.pat[pid]=[]; if(!S.pat[pid].includes(cid)) S.pat[pid].push(cid); save(); }
+
+/* Ligue os pontos */
+function quiz(container, moments, cid){
+  return new Promise(res=>{
+    const qs=moments.filter(m=>m.kind==='sinal').map(m=>({q:m.s.q,who:m.s.who,correct:m.s.p}));
+    const decoy=moments.find(m=>m.kind==='decoy'); if(decoy) qs.push({q:decoy.q,who:decoy.who,d:decoy.d,correct:'__cuidado'});
+    let i=0, score=0; const allPids=Object.keys(PATTERNS);
+    const el=document.createElement('div'); el.className='quiz'; container.appendChild(el);
+    function showQ(){
+      if(i>=qs.length){ el.innerHTML=`<div class="qn">Ligue os pontos · resultado</div><div class="quote">${score} de ${qs.length}</div><div class="who">${score===qs.length?'Você leu todas as entrelinhas deste capítulo.':score>=qs.length/2?'Boa leitura. Os que faltaram estão no seu Caderno de Padrões para rever.':'Difícil, né? É invisível de propósito. Os padrões ficam no Caderno — vale reler.'}</div>`; res(score); return; }
+      const q=qs[i]; const isDecoy=q.correct==='__cuidado';
+      const pool=allPids.filter(p=>p!==q.correct); const same=CHAPTERS[cid].sinais.map(s=>s.p).filter(p=>p!==q.correct);
+      const dist=[...new Set([...same.sort(()=>Math.random()-.5), ...pool.sort(()=>Math.random()-.5)])].slice(0,2);
+      const opts=[ ...dist.map(p=>({id:p,label:PATTERNS[p].n})), isDecoy?{id:'__cuidado',label:'Cuidado de verdade — isso não é um sinal'}:{id:q.correct,label:PATTERNS[q.correct].n} ];
+      if(!isDecoy && Math.random()<.5) opts.push({id:'__cuidado',label:'Cuidado de verdade — isso não é um sinal'});
+      opts.sort(()=>Math.random()-.5);
+      el.innerHTML=`<div class="qn">Ligue os pontos · ${i+1} de ${qs.length}</div><div class="quote">${q.q}</div><div class="who">${q.who||''}</div><div class="opts">${opts.map(o=>`<button data-id="${o.id}">${o.label}</button>`).join('')}</div><div class="fb"></div><button class="nxt">${i+1<qs.length?'Próxima':'Ver resultado'}</button>`;
+      el.querySelectorAll('.opts button').forEach(b=>b.onclick=()=>{
+        const ok=b.dataset.id===q.correct; if(ok) score++;
+        el.querySelectorAll('.opts button').forEach(x=>{ x.disabled=true; if(x.dataset.id===q.correct) x.classList.add(ok?'right':'reveal'); else if(x===b) x.classList.add('wrong'); });
+        const fb=el.querySelector('.fb'); let html='';
+        if(isDecoy){ html=`<b>${ok?'Isso mesmo':'Esse não era um sinal'}</b>${q.d}`; }
+        else { const P=PATTERNS[q.correct]; const places=patternPlaces(q.correct).filter(p=>p.title!==CHAPTERS[cid].title); html=`<b>${ok?'Certo':'Era'} · ${P.n}</b>${P.d}`; if(places.length) html+=`<div class="rec">Esse padrão também aparece em: ${places.map(p=>`${p.who} (cap. ${p.chap}, ${p.title})`).join(' · ')}.</div>`; if(ok) notePattern(q.correct,cid); }
+        fb.innerHTML=html; fb.classList.add('on'); sfx(ok?'right':'wrong');
+        const nx=el.querySelector('.nxt'); nx.classList.add('on'); nx.onclick=()=>{ i++; showQ(); el.scrollIntoView({behavior:'smooth',block:'start'}); };
+      });
+    }
+    showQ();
+  });
+}
+function openCaderno(){
+  const pat=S.pat||{}; const ids=Object.keys(PATTERNS); const got=ids.filter(p=>pat[p]&&pat[p].length);
+  $('#cadCount').textContent=`${got.length} de ${ids.length} padrões`;
+  $('#cadList').innerHTML = ids.map(p=>{ const P=PATTERNS[p]; if(!pat[p]||!pat[p].length) return `<div class="pat unk"><div class="n">Padrão ainda não reconhecido</div></div>`; const places=patternPlaces(p); return `<div class="pat"><div class="n">${P.n}</div><div class="d">${P.d}</div><div class="w">Aparece em: ${places.map(x=>`${x.who} (cap. ${x.chap})`).join(' · ')}</div></div>`; }).join('');
+  $('#caderno').classList.add('on');
+}
+$('#cadClose').onclick=()=>{ sfx('click'); $('#caderno').classList.remove('on'); };
+$('#btnCad').onclick=()=>{ if($('#caderno').classList.contains('on')||$('#ask').classList.contains('on')||$('#nameScreen').classList.contains('on')) return; openCaderno(); };
+
+/* ---------------- ROTEIRO ---------------- */
+const D=(k,t,ex,o)=>[k,t,ex,o], N=(t,o)=>['NARR',t,null,o], P=(t,o)=>['P',t,null,o];
+
+const SCRIPT = {
+/* ---------- PRÓLOGO ---------- */
+pro_1: [
+  {save:'pro_1'},
+  {day:'Sábado — o dia da mudança'},
+  {bg:'predio'},
+  N('Caixas. Um corredor que ainda não é seu. O apartamento 403 vai ser a sua casa a partir de hoje, {nome}.'),
+  N('Cidade nova, prédio novo, escola nova na segunda. Tudo ao mesmo tempo.'),
+  N('Ninguém aqui sabe por que você se mudou. Você prefere assim. Tem uma caixa lá embaixo escrita "COISAS VELHAS" que você preferia nem ter trazido.'),
+  {show:'celine',ex:'h',pos:'right'},
+  D('celine','Ei! Você deve ser do 403. Celine, do 402, sua vizinha de parede. Quer ajuda com essa caixa? Ela tá claramente ganhando a briga.','h'),
+  {choice:['Aceitar a ajuda, rindo.','"Valeu, mas eu consigo!" (não consegue)'],go:['pro_1a','pro_1b']}
+],
+pro_1a:[ P('Aceito. Ela tá pesada demais pra minha dignidade.'), D('celine','Dignidade é a primeira coisa que a gente perde numa mudança. Bora.','h'), {jump:'pro_2'} ],
+pro_1b:[ N('A caixa quase cai. A Celine segura a outra ponta sem falar nada, só sorrindo.'), D('celine','Eu não vi nada. Bora.','h'), {jump:'pro_2'} ],
+pro_2: [
+  N('Vocês sobem conversando. Ela conta onde fica o mercado, qual padaria vale a pena, que dia passa o caminhão de lixo.'),
+  D('celine','Ah, e uma dica de sobrevivência: o vizinho do 401 é… como eu vou dizer…','n'),
+  {show:'davi',ex:'h',pos:'left'},
+  D('davi','Opa! Gente nova. Davi, do 401. Aqui é um prédio tranquilo, viu. Só não gosto de barulho. Brincadeira.','c'),
+  D('davi','Mais ou menos.','c'),
+  N('Ele riu sozinho. A Celine não riu junto. Você guarda isso sem saber por quê.'),
+  {hide:'all'},
+  N('Vinte minutos depois, batem na sua porta. É o Davi, com um pacote na mão.'),
+  {show:'davi',ex:'h',pos:'center'},
+  D('davi','Chegou pra você na portaria. Eu já tava subindo, trouxe. Viu como aqui todo mundo se ajuda?','h'),
+  N('O pacote está aberto. A fita, rasgada com cuidado e colada de novo, torta.'),
+  D('davi','Veio assim.','c'),
+  N('Ele disse isso antes de você perguntar qualquer coisa.'),
+  {hide:'all'},
+  {jump:'pro_3'}
+],
+pro_3: [
+  {bg:'salaCeline'},
+  N('Noite. Seu apartamento ainda é um labirinto de caixas com uma cama no meio.'),
+  N('A caixa de "COISAS VELHAS" ficou num canto. Dentro dela tem uma foto que você virou pra baixo antes de fechar.'),
+  N('Você não está pronto pra ela. Talvez nunca esteja.'),
+  N('Aí você ouve. Do outro lado da parede: TOC. TOC. TOC. Alguém batendo. Depois, silêncio.'),
+  N('Você ainda não sabe o que isso significa. Vai saber.'),
+  {day:'Domingo — o mercado'},
+  {bg:'praca'},
+  N('A Celine te levou ao mercado "pra você não comprar arroz da marca errada como um turista".'),
+  {show:'celine',ex:'h',pos:'center'},
+  D('celine','O 403 tava vazio fazia meses, sabia? A menina que morava aí antes saiu às pressas. Ninguém nunca soube direito por quê.','n'),
+  P('Às pressas como?'),
+  D('celine','De um dia pro outro. Deixou até planta pra trás. Eu reguei por um tempo, depois adotei. A samambaia da minha sala é órfã do seu apartamento.','n'),
+  N('Você ri. Mas a frase fica: "saiu às pressas. ninguém soube por quê."'),
+  D('celine','Enfim! Amanhã você começa na escola, né? Relaxa. Gente nova sempre acha que vai ser pior do que é.','h'),
+  {jump:'c1_1'}
+],
+
+/* ---------- CAPÍTULO 1 · ISIS ---------- */
+c1_1: [
+  {save:'c1_1'},{chap:'c1'},
+  {day:'Segunda — primeiro dia de aula'},
+  {bg:'corredor'},
+  N('Escola nova. Você entra na sala errada uma vez. Na segunda tentativa, acerta.'),
+  {show:'isis',ex:'h',pos:'right'},
+  D('isis','Cadeira vaga é essa do lado. Pode sentar. Eu sou a Isis — e você é a pessoa nova que todo mundo tá fingindo que não tá olhando.','h'),
+  P('Prazer. {nome}.'),
+  D('isis','Bem-vind{g}, {nome}. Regra um: o pastel da cantina muda vidas. Regra dois: nunca, jamais, compre o suco verde.','h'),
+  {bg:'cantina'},
+  N('No intervalo, ela te arrasta pra mesa dela e te apresenta pra meio mundo.'),
+  {show:'sofia',ex:'h',pos:'left'},
+  D('sofia','Oi! Sofia. Se precisar de resumo de matéria, eu tenho de tudo, sério. Até de artes.','h'),
+  {show:'matheus',ex:'h',pos:'center'},
+  D('matheus','E eu sou o motivo de ela fazer resumo em dobro. Matheus. A gente vem no pacote.','h'),
+  N('Um professor passa e solta, rindo: "Sofia, seus resuminhos coloridos de novo?" Alguns riem.'),
+  D('matheus','Rindo do quê? Esses "resuminhos" salvaram a média de metade dessa mesa. Inclusive a sua, Pedrão.','a'),
+  N('A mesa riu de novo — dessa vez do lado certo. A Sofia ficou vermelha de contente.'),
+  N('Você pensa: que amigo bom. Guarda esse pensamento. Ele vai doer depois.'),
+  {hide:'sofia'},{hide:'matheus'},
+  N('Mais adiante, uma menina de brincos grandes acena — Olívia, do terceiro ano — enquanto um garoto espera por ela no portão com um café na mão.'),
+  D('isis','Aquele é o Arthur, namorado dela. Traz café todo dia. Metade da escola acha fofo.','n'),
+  P('E a outra metade?'),
+  D('isis','A outra metade não pensou no assunto. Bora, meu irmão busca a gente. Gael. Ele é super de boa, cê vai ver.','h'),
+  {jump:'c1_1b'}
+],
+c1_1b: [
+  {bg:'predio'},
+  N('No carro, o Gael é exatamente o que a Isis prometeu: engraçado, gente boa, com uma playlist melhor que a sua.'),
+  N('Ele pergunta seu nome. De onde você veio. De quem você já é amig{g}.'),
+  N('Depois pergunta de novo. As mesmas perguntas, com outras palavras, como quem confere.'),
+  N('"Só pra saber quem anda com a minha irmã", ele diz, sorrindo pro retrovisor.'),
+  N('Você acha simpatia. Acha. Guarda essa impressão — vamos voltar nela.'),
+  {jump:'c1_2'}
+],
+c1_2: [
+  {day:'Terça — trabalho em dupla'},
+  {bg:'quartoIsis'},
+  N('Casa da Isis. Cartolina, canetinha, uma playlist tocando do celular dela.'),
+  {show:'isis',ex:'h',pos:'left'},
+  D('isis','Se a gente caprichar na capa, a professora nem lê o resto. Confia em mim.','h'),
+  N('O celular dela vibra. Ela sorri pra tela daquele jeito específico.'),
+  P('Namorado?'),
+  D('isis','Téo. Um mês e três dias. Não que eu esteja contando.','y'),
+  D('isis','Ele é do outro colégio. A gente se conheceu no campeonato de handebol. Ele perdeu feio e mesmo assim veio falar comigo, então é corajoso.','h'),
+  N('A porta abre. Sem bater.'),
+  {show:'gael',ex:'h',pos:'right'},
+  D('gael','Com quem cê tá falando?','h'),
+  D('isis','Ninguém. Tô fazendo trabalho, ó.','t'),
+  N('Ele atravessa o quarto e pega o celular da mão dela. Lê. Na sua frente, como se fosse a coisa mais normal do mundo.'),
+  D('gael','Hm. Téo.','c'),
+  D('gael','Relaxa, visita. Eu só tô cuidando dela.','c'),
+  {sinal:'c1s1'},
+  {choice:['"Ela tava só no celular dela…"','Ficar quiet{g} — você mal conhece essa família.'],go:['c1_2a','c1_2b']}
+],
+c1_2a:[ D('gael','E você mal chegou e já tá opinando? Zoeira. Aqui em casa é assim mesmo, cê vai se acostumar.','c'), N('Ele devolve o celular e sai. A Isis não olha pra você.'), {jump:'c1_2c'} ],
+c1_2b:[ N('Você fica quiet{g}. Ele devolve o celular e sai assobiando.'), N('O assobio é a parte que incomoda. Como se nada tivesse acontecido. Porque, pra ele, nada aconteceu.'), {jump:'c1_2c'} ],
+c1_2c: [
+  D('isis','~Ele não podia ter feito isso.~ Ele é assim mesmo. Superprotetor.','t'),
+  {fade:'isis',lvl:1},
+  N('Ela muda de assunto com um sorriso rápido demais. Fala da capa, da professora, do pastel.'),
+  N('Vocês terminam o trabalho. A playlist continua tocando, mas a Isis não canta mais junto.'),
+  N('No caminho de volta, você se pega pensando: talvez seja coisa de irmão. Talvez.'),
+  N('É assim que funciona. A dúvida vem de brinde.'),
+  {jump:'c1_3'}
+],
+c1_3: [
+  {day:'Quarta — o jantar'},
+  {bg:'cozinha'},
+  N('A mãe da Isis fez questão: "gente nova na cidade não janta sozinha". Você foi.'),
+  N('Antes do jantar, o Gael te mostrou a prateleira de medalhas dele. Futsal, natação, um troféu de xadrez que ele jura que não foi sorte.'),
+  N('Ele é engraçado. Ele é gentil com a mãe. Ele te serviu primeiro.'),
+  N('Você precisa saber disso. Porque é isso que torna o resto difícil de ver.'),
+  {show:'mae',ex:'n',pos:'left'},{show:'isis',ex:'n',pos:'center'},{fade:'isis',lvl:1},{show:'gael',ex:'h',pos:'right'},
+  D('mae','E o cursinho, Isis? Tá dando conta?','n'),
+  D('gael','A Isis anda bem distraída ultimamente. Né, Isis?','c'),
+  {sinal:'c1s2'},
+  N('Você vê. O garfo dela para no ar. Um segundo longo demais.'),
+  D('isis','~Para com isso.~ Tá tudo bem, mãe.','t'),
+  D('gael','Tá sim. Eu cuido dela.','h'),
+  D('mae','Que bom ter irmão assim, né, {nome}?','h'),
+  {decoy:{q:'"Que bom ter irmão assim, né?"',who:'Dona Márcia, mãe da Isis',d:'A fala da mãe é sincera — ela só viu um irmão "cuidando". É exatamente por isso que essa violência é invisível: de fora, parece carinho.'}},
+  {choice:['"É… ele parece bem presente." (e continuar observando)','Mudar de assunto pra aliviar a Isis'],go:['c1_3a','c1_3b']}
+],
+c1_3a:[ N('Você responde no automático. Mas a cena fica presa na sua cabeça: por que a Isis congelou?'), {jump:'c1_3c'} ],
+c1_3b:[ P('Dona Márcia, esse arroz tá incrível. Qual é o segredo?'), N('A mãe emenda uma aula de temperos de vinte minutos. A Isis solta o ar devagar. Te agradece só com o olhar.'), {jump:'c1_3c'} ],
+c1_3c: [
+  {hide:'mae'},{hide:'isis'},
+  N('Na saída, o Gael te acompanha até o portão. Espera a porta da cozinha fechar. Baixa a voz.'),
+  {show:'gael',ex:'n',pos:'center'},
+  D('gael','Ô, {nome}. A Isis anda inventando uns dramas. Coisa de adolescente, sabe como é.','n'),
+  D('gael','Se ela te falar alguma coisa estranha… você me conta, né? A gente cuida dela juntos.','c'),
+  {sinal:'c1s4'},
+  {choice:['"Que tipo de coisa estranha?"','"Pode deixar." (e não deixar)'],go:['c1_3d','c1_3e']}
+],
+c1_3d:[ D('gael','Qualquer coisa. Você entende. Você parece esperto.','c'), N('Ele aperta a sua mão com um segundo a mais de força. Você entende, sim. Só que não do jeito que ele espera.'), {jump:'c1_4'} ],
+c1_3e:[ N('Você diz "pode deixar" e sustenta o sorriso dele. Andando pra casa, você percebe o que acabou de acontecer: ele tentou transformar você em vigia.'), N('Quantas pessoas ele já recrutou assim?'), {jump:'c1_4'} ],
+c1_4: [
+  {day:'Quinta — o intervalo'},
+  {bg:'patio'},
+  {show:'isis',ex:'s',pos:'center'},{fade:'isis',lvl:2},
+  N('A Isis tá diferente. Responde o Téo com uma palavra. Não falou do pastel nenhuma vez.'),
+  N('Você senta do lado dela e não diz nada. Às vezes é assim que se abre uma porta.'),
+  D('isis','…O Gael falou com você ontem, né? No portão. Eu vi pela janela.','s'),
+  P('Falou. Pediu pra eu contar pra ele se você me falasse "alguma coisa estranha".'),
+  D('isis','E você vai contar?','s'),
+  P('Não. Eu tô contando pra você.'),
+  N('Ela olha pra você por um longo segundo. Alguma coisa se decide nesse segundo.'),
+  D('isis','Desde terça ele exige ver as minhas conversas. Todas. Toda noite.','s'),
+  D('isis','E se eu não mostrar, ele conta pros meus pais uma coisa que eu confiei pra ele. Uma coisa minha.','s'),
+  D('isis','"Se você não me obedecer, eles vão saber de tudo. Você que vai me obrigar." Foi assim que ele falou. Como se a culpa fosse minha.','s'),
+  {sinal:'c1s3'},
+  D('isis','Ontem eu tentei falar com a minha mãe. Cheguei na porta da cozinha. Ele tava lá, secando a louça com ela, rindo.','s'),
+  D('isis','Eu voltei pro quarto. Ele nem me viu. Não precisou.','s'),
+  N('É isso que ninguém entende de fora: ele não precisa estar no quarto pra estar no quarto.'),
+  {choice:['"Isso tem nome: chantagem. Cuidar não é isso."','"O que você contou pra ele continua sendo seu. Não é dívida."','"E se você contar pra sua mãe antes dele?"'],go:['c1_4a','c1_4b','c1_4c']}
+],
+c1_4a:[ D('isis','Chantagem… Falado assim, em voz alta, parece óbvio. Por que dentro de casa não parece?','s'), {jump:'c1_4x'} ],
+c1_4b:[ D('isis','Minha dívida… Eu tava me sentindo devendo. Que absurdo, né? Eu confiei nele.','s'), {jump:'c1_4x'} ],
+c1_4c:[ D('isis','Eu pensei nisso. Mas e se ela acreditar nele? Ele é o mais velho, o "responsável". Ele seca a louça.','s'), {jump:'c1_4x'} ],
+c1_4x: [
+  P('Então não vai sozinha. Se quiser, eu vou junto até a porta. Você fala, eu só fico por perto.'),
+  N('Ela fica um tempo em silêncio, mexendo no zíper da mochila. Abre, fecha. Abre, fecha.'),
+  D('isis','…Hoje à noite. Antes que eu desista de novo.','n'),
+  {jump:'c1_5'}
+],
+c1_5: [
+  {day:'Quinta — de noite'},
+  {bg:'salaCeline'},
+  N('Seu apartamento. Você não consegue dormir. Fica olhando pro teto, pensando no garfo parado no ar.'),
+  N('TOC. TOC. Na parede. De novo. Você já nem se assusta — e isso, percebe, é o começo do problema: a gente se acostuma.'),
+  N('O celular acende.'),
+  {phone:['Isis',[['you','vc tá acordad{g}?'],['me','tô. e aí?'],['you','eu ia falar com ela agora mas ele tá na sala'],['you','assistindo tv. normal. rindo dos comerciais'],['you','como é que uma pessoa assiste tv normal depois do que disse pra mim'],['me','porque pra ele não foi nada. é por isso que vc precisa falar. hoje, amanhã, quando der. mas fala'],['you','e se ela não acreditar'],['me','aí vc não vai estar sozinha com isso. eu tô aqui. o téo tb. um segredo pesa menos dividido'],['you','…ok'],['you','amanhã. prometido.']]]},
+  N('Você fica um tempo olhando o "prometido" na tela.'),
+  N('Da última vez que alguém te prometeu uma coisa assim, você não insistiu. A foto virada pra baixo na caixa sabe disso.'),
+  N('Dessa vez você insistiu.'),
+  {jump:'c1_6'}
+],
+c1_6: [
+  {day:'Sexta — o portão'},
+  {bg:'patio'},
+  {show:'isis',ex:'h',pos:'center'},{fade:'isis',lvl:0},
+  N('Sexta de manhã, a Isis te espera no portão. Os olhos estão inchados. E leves.'),
+  D('isis','Contei. Tudo. Minha mãe me ouviu até o fim, do jeito que eu pedi.','n'),
+  D('isis','Ela disse que o que eu contei pro Gael era meu. Que não era dívida nenhuma.','h'),
+  D('isis','E sabe o que ela fez depois? Chamou ele na cozinha. Mandou ele sentar. E falou na frente dele: "cuidar não é isso".','n'),
+  D('isis','Ele tentou o "eu só tava cuidando dela". Não colou. Pela primeira vez na vida, não colou.','h'),
+  D('isis','Obrigada por não ter feito cara de pena, {nome}. E por não ter virado o vigia dele.','h'),
+  N('Na saída da escola, o carro do Gael passa devagar. Ele olha pra você pelo vidro. Não acena.'),
+  N('Ele sabe que foi você. Você sustenta o olhar até o carro virar a esquina.'),
+  N('Seu coração tá batendo rápido. Mas você não desvia.'),
+  {voz:true},
+  {fim:'c1'}
+],
+
+/* ---------- CAPÍTULO 2 · OLÍVIA ---------- */
+c2_1: [
+  {save:'c2_1'},{chap:'c2'},
+  {day:'Segunda semana — segunda-feira'},
+  {bg:'corredor'},
+  N('Você já sabe onde fica tudo. Inclusive o pastel. Principalmente o pastel.'),
+  N('A professora sorteia os grupos do trabalho de história: você, a Olívia e o Rafa.'),
+  {show:'olivia',ex:'h',pos:'center'},
+  D('olivia','Grupo bom! Eu faço os slides, você pesquisa, e o Rafa apresenta porque ele tem lábia. Combinado?','h'),
+  P('Combinado. Você é a dos brincos que a Isis me apresentou, né?'),
+  D('olivia','"A dos brincos"! Amei. Meu pai fala que dá pra me ouvir chegando antes de me ver.','h'),
+  D('olivia','Esses aqui foram presente da minha avó. Ela falava: "menina, entra nos lugares fazendo barulho, que é pra ninguém fingir que você não chegou".','h'),
+  N('Você vai lembrar dessa frase. Anota aí.'),
+  {show:'arthur',ex:'h',pos:'right'},
+  N('O namorado dela aparece com um café. Todo dia tem café, você vai descobrir.'),
+  D('arthur','Trouxe seu café, amor. E aí, cê que é a pessoa nova? Toma, trouxe um pra você também.','h'),
+  P('Pra mim?'),
+  D('arthur','Claro. Quem faz trabalho com a minha namorada é quase da família. Dá uma olhada nela pra mim aqui na escola.','h'),
+  P('…Olhar como, assim?'),
+  D('arthur','Zoeira.','c'),
+  N('Ele te dá o café e um aperto de mão firme. Você pensa: cara simpático.'),
+  N('Você já pensou isso antes. Num carro, ouvindo uma playlist boa.'),
+  D('arthur','Amor, cê tá linda hoje. Sabia que você fica ainda mais bonita natural, sem tanta coisa no rosto?','h'),
+  {sinal:'c2s1'},
+  D('olivia','…Obrigada?','y'),
+  N('Ela riu. Meio de lado. Você já viu esse riso antes — na Isis, no jantar.'),
+  {jump:'c2_2'}
+],
+c2_2: [
+  {day:'Terça — a lanchonete'},
+  {bg:'lanchonete'},
+  N('O trabalho rendeu, e a Olívia chamou: lanchonete com a Lara e a Bê. Você foi.'),
+  {show:'lara',ex:'h',pos:'left'},{show:'olivia',ex:'h',pos:'center'},{show:'be',ex:'h',pos:'right'},
+  D('be','Gente, a Oli contando piada de novo! Tava com saudade disso.','h'),
+  D('lara','Ela era mais barulhenta, sabe, {nome}? No bom sentido. Tipo os brincos.','n'),
+  N('"Era." O verbo no passado passa voando. Quase ninguém pega.'),
+  N('O celular dela vibra. E vibra. E vibra. Ela pede licença e mostra a tela pra você, tipo quem pede socorro rindo.'),
+  {phone:['Arthur',[['you','vc tá onde'],['you','oi?'],['you','tá com elas de novo?'],['you','eu tava querendo te ver hoje'],['you','deixa. divirta-se.'],['you','sério, se vc gostasse de mim de verdade preferia ficar comigo. mas tudo bem']]]},
+  {sinal:'c2s2'},
+  D('olivia','Ele é intenso, né? Deve ser porque gosta muito de mim.','y'),
+  D('lara','Tá tudo bem mesmo, Oli?','n'),
+  {decoy:{q:'"Tá tudo bem mesmo, Oli?"',who:'Lara, amiga da Olívia',d:'A Lara perguntou porque se importa — e não cobrou nada em troca. Compare com as mensagens de dez segundos atrás: cuidado de verdade não vem com fatura.'}},
+  D('olivia','~Não sei.~ Tá! Só o Arthur com saudade.','t'),
+  {choice:['"Intenso é uma palavra. Cobrança é outra."','Guardar a conversa pra quando estiverem sós.'],go:['c2_2a','c2_2b']}
+],
+c2_2a:[ D('olivia','Cobrança… Você fala igual à Lara. Vocês não entendem, ele só gosta de saber onde eu tô. É cuidado.','s'), N('"Cuidado." A palavra fica ecoando. Você já ouviu ela ser usada assim — semana passada, num quarto com playlist.'), {jump:'c2_3'} ],
+c2_2b:[ N('Você guarda. Tem hora pra tudo — e plateia nenhuma ajuda nessas conversas.'), {jump:'c2_3'} ],
+c2_3: [
+  {day:'Quarta — o grupo de trabalho'},
+  {bg:'corredor'},
+  {show:'rafa',ex:'n',pos:'left'},{show:'olivia',ex:'n',pos:'center'},
+  D('rafa','Fechamos a parte 3 hoje? Te mando o resto no zap, Olívia.','n'),
+  D('olivia','Fechado!','h'),
+  {hide:'rafa'},{show:'arthur',ex:'n',pos:'right'},
+  N('O Arthur ouviu. Esperou o Rafa virar o corredor.'),
+  D('arthur','Esse cara tá na sua. Eu percebo essas coisas. Sai desse grupo.','n'),
+  D('olivia','É trabalho de escola, Arthur. {nome} tá no grupo também!','t'),
+  D('arthur','Então troca de grupo. Se eu sou importante pra você, troca.','c'),
+  {sinal:'c2s4'},
+  N('Na quinta, a Olívia saiu do grupo. Disse pra professora que "ficou sem tempo". Disse pra você sem olhar nos seus olhos.'),
+  {fade:'olivia',lvl:1},
+  {hide:'olivia'},{hide:'arthur'},
+  {show:'rafa',ex:'s',pos:'center'},
+  D('rafa','Ela saiu do grupo? …Eu fiz alguma coisa? Sério, se eu falei algo errado eu peço desculpa.','s'),
+  {choice:['"Você não fez nada. O problema não é você."','"Depois eu te explico. Não é sua culpa."'],go:['c2_3a','c2_3b']}
+],
+c2_3a:[ D('rafa','Então quem é o problema?','n'), N('Você não responde. Ele segue o seu olhar até o portão, onde o Arthur espera com o café de sempre. E entende sem entender.'), {jump:'c2_4'} ],
+c2_3b:[ D('rafa','…Tá. Mas fala pra ela que a vaga no grupo continua sendo dela, tá?','n'), N('Todo mundo em volta percebe um pedacinho. Ninguém junta os pedaços. Você tá juntando.'), {jump:'c2_4'} ],
+c2_4: [
+  {day:'Quinta — a mensagem'},
+  {bg:'salaCeline'},
+  N('Noite. Você tá terminando a pesquisa do trabalho quando o celular acende. Número desconhecido.'),
+  {phone:['Arthur',[['you','e aí. aqui é o arthur, peguei seu número com um pessoal'],['you','vc é gente boa. gostei de vc'],['you','mas não enche a cabeça da Olívia com ideia, falou? ela se confunde fácil'],['you','confio em vc 👊']]]},
+  {sinal:'c2s6'},
+  N('Você lê três vezes. É educado. É simpático. E é uma ameaça — embrulhada em emoji.'),
+  N('O Gael pediu pra você vigiar. O Arthur tá pedindo pra você calar. O método muda de roupa, não de dono.'),
+  {choice:['Responder: "A cabeça é dela. Boa noite."','Não responder — e contar pra Olívia amanhã.','Não responder — e printar. Prova é prova.'],go:['c2_4a','c2_4b','c2_4c']}
+],
+c2_4a:[ {phone:['Arthur',[['me','a cabeça é dela. boa noite'],['you','é exatamente disso que eu tô falando 👍'],['you','😉']]]}, N('O emoji de piscadinha fica na tela como um bilhete embaixo da porta. Você não responde mais. Mas também não apaga: prova é prova.'), {jump:'c2_5'} ],
+c2_4b:[ N('Você não dá a ele a conversa que ele quer. No dia seguinte, mostra a mensagem pra Olívia. Ela lê duas vezes e devolve o celular sem falar nada.'), N('Tem silêncio que é o som de uma ficha caindo.'), {jump:'c2_5'} ],
+c2_4c:[ N('Você printa. Salva. Não é fofoca, não é vingança: é registro. A Celine te ensinou essa palavra sem saber que ensinou.'), {jump:'c2_5'} ],
+c2_5: [
+  {day:'Sexta — a festa da Lara'},
+  {bg:'festa'},
+  N('Meio mundo foi. A Olívia chegou com o Arthur — e com um casaco fechado até o pescoço, numa noite quente.'),
+  {show:'olivia',ex:'s',pos:'center'},{fade:'olivia',lvl:2},{show:'arthur',ex:'x',pos:'right'},
+  N('Você passa perto dos dois sem querer e escuta:'),
+  D('arthur','Eu não tô proibindo, tá? Só tô dizendo que não gosto. Mas você faz o que quiser.','c'),
+  {sinal:'c2s3'},
+  N('Ela "quis" ficar de casaco a noite inteira. Ele não falou com ela a noite inteira.'),
+  N('Você faz um teste. Vai falar com a Olívia perto da mesa de salgados. Em dez segundos, o Arthur aparece do lado.'),
+  N('Você repete o teste mais duas vezes durante a festa. Dez segundos. Média cronometrada.'),
+  N('Ele não tira os olhos dela. Antes você teria chamado isso de paixão. Agora você sabe o nome certo: vigilância.'),
+  N('E uma coisa boba, pequena, que não sai da sua cabeça: cadê os brincos grandes?'),
+  {jump:'c2_6'}
+],
+c2_6: [
+  {day:'Sábado — a praça'},
+  {bg:'praca'},
+  {show:'olivia',ex:'s',pos:'center'},{fade:'olivia',lvl:2},
+  N('Ela te chamou. Só você. "Preciso de alguém de fora", disse a mensagem.'),
+  D('olivia','Ontem eu falei pra ele que tava me sentindo sufocada. Sabe o que ele respondeu?','s'),
+  D('olivia','"Você tá exagerando. Eu faço tudo isso porque te amo."','s'),
+  {sinal:'c2s5'},
+  D('olivia','E o pior, {nome}? Por um segundo eu acreditei. Que era exagero meu. Que amor é isso mesmo.','s'),
+  D('olivia','Todo mundo adora ele. Os professores adoram. Minha mãe adora. Talvez o problema seja eu.','s'),
+  N('"Talvez o problema seja eu." Se você um dia quiser saber como a violência invisível vence, é com essa frase.'),
+  {choice:['"Amor não pede pra você sumir. E você sumiu, Olívia."','"Quando foi a última vez que você escolheu algo sem medo da reação dele?"','Mostrar a mensagem que ele te mandou.'],go:['c2_6a','c2_6b','c2_6c']}
+],
+c2_6a:[ D('olivia','Sumi… das minhas amigas, do grupo, da festa mesmo estando nela.','s'), {jump:'c2_6x'} ],
+c2_6b:[ N('Ela abre a boca pra responder rápido. Fecha. Pensa. O silêncio dela responde primeiro.'), D('olivia','…Eu não lembro.','s'), {jump:'c2_6x'} ],
+c2_6c:[ N('Você mostra a tela. "não enche a cabeça dela com ideia. ela se confunde fácil."'), D('olivia','"Se confunde fácil"… É assim que ele fala de mim? Pras pessoas?','a'), D('olivia','Eu não tô confusa. Eu tava sendo confundida. É diferente.','d'), {jump:'c2_6x'} ],
+c2_6x: [
+  D('olivia','Eu nem lembro quando parei de usar os meus brincos.','s'),
+  D('olivia','Minha avó dizia pra eu entrar nos lugares fazendo barulho. Eu tô saindo dos lugares na ponta dos pés.','s'),
+  N('Ela olha pro chão um tempo longo. Depois pega o celular. Digita. Apaga. Digita de novo. Apaga de novo.'),
+  D('olivia','Não. Isso eu vou dizer olhando pra ele. Amanhã.','d'),
+  {jump:'c2_7'}
+],
+c2_7: [
+  {day:'Domingo — fim de tarde'},
+  {bg:'praca'},
+  N('Ela pediu pra você e a Lara esperarem na esquina. "Se eu olhar pra vocês, eu não volto atrás", ela disse. Era exatamente o plano.'),
+  {show:'olivia',ex:'d',pos:'left'},{fade:'olivia',lvl:1},{show:'arthur',ex:'s',pos:'right'},
+  D('arthur','Você tá terminando comigo por causa de um brinco?','a'),
+  D('olivia','Não. Eu tô terminando porque eu não consigo mais escolher nada sem pensar em como você vai reagir.','d'),
+  D('arthur','Eu mudo. Sério. Me dá uma chance.','s'),
+  D('olivia','Você teve todas. Acabou, Arthur.','d'),
+  D('arthur','Você vai se arrepender. Todo mundo vai saber que você surtou do nada.','a'),
+  D('olivia','Conta. E quando te perguntarem o que aconteceu, torce pra ninguém ter print.','d'),
+  {hide:'arthur'},{fade:'olivia',lvl:0},{show:'lara',ex:'h',pos:'right'},
+  N('Ela vem andando até vocês. A cada passo, um pouco mais inteira.'),
+  N('Na segunda-feira, ele tentou a versão dele: "ela surtou, tá maluca". Durou meia manhã.'),
+  N('Porque a Lara tava lá. A Bê tava lá. O Rafa tava lá. E você tava lá — com print.'),
+  N('Boato é planta: sem terreno, não pega.'),
+  N('Os brincos, você repara, voltaram. Dá pra ouvir a Olívia chegando antes de vê-la. Como tem que ser.'),
+  {voz:true},
+  {fim:'c2'}
+],
+
+/* ---------- CAPÍTULO 3 · SOFIA ---------- */
+c3_1: [
+  {save:'c3_1'},{chap:'c3'},
+  {day:'Terceira semana — segunda-feira'},
+  {bg:'escada'},
+  N('Você e a Sofia viraram dupla fixa de escada — é onde ela gosta de lanchar, longe do barulho da cantina.'),
+  N('Ela é a pessoa mais organizada que você já conheceu. Resumos com três cores de caneta. Agenda com adesivos. Tudo no lugar.'),
+  N('Você já aprendeu a ler isso também: às vezes a pessoa organiza o caderno porque não consegue organizar o resto.'),
+  {show:'sofia',ex:'n',pos:'center'},
+  D('sofia','Posso te contar uma coisa? Promete que não conta pra ninguém? Ninguém mesmo?','s'),
+  P('Prometo.'),
+  D('sofia','Meus pais estão se separando. E eu comecei a fazer terapia. Ninguém da escola sabe. Só o Matheus.','s'),
+  D('sofia','Eu contei pra ele faz um mês. E ele foi incrível naquele dia, sério. Me ouviu, me abraçou, faltou aula comigo pra ficar na escada.','n'),
+  D('sofia','Lembra dele defendendo os meus resumos na frente de todo mundo? Ele é assim. Ele É assim.','n'),
+  D('sofia','Mas ultimamente ele faz umas… brincadeiras. Você vai entender quando ver.','s'),
+  N('Você já entendeu antes de ver. Mas espera. Porque ela ainda precisa que seja brincadeira.'),
+  {jump:'c3_2'}
+],
+c3_2: [
+  {day:'Terça — o trabalho em dupla'},
+  {bg:'corredor'},
+  {show:'sofia',ex:'n',pos:'left'},{show:'matheus',ex:'h',pos:'right'},
+  D('matheus','Sofia, me passa a sua parte que eu mudo umas palavras e pronto, tá feito.','h'),
+  D('sofia','Não. Faz a sua, a prof percebe.','n'),
+  D('matheus','{s:Nossa, que amiga.|Nossa, que amiga do caralho.}','a'),
+  D('matheus','Se eu quisesse, podia contar pra todo mundo o que você me falou, sabia? Brincadeira.','c'),
+  {sinal:'c3s1'},
+  N('Ele riu. Ela não. Ela abriu o caderno e passou a parte dela.'),
+  D('sofia','~Você não faria isso.~ …Toma.','t'),
+  {fade:'sofia',lvl:1},
+  {choice:['"Isso não pareceu brincadeira, Matheus."','Trocar um olhar com a Sofia — vocês conversam depois.'],go:['c3_2a','c3_2b']}
+],
+c3_2a:[
+  D('matheus','Relaxa! A gente é assim, né, Sofia?','h'),
+  N('Ela concorda com a cabeça. Pequena. "A gente é assim" — você anota mentalmente quem foi que definiu esse "assim".'),
+  D('matheus','Você chegou semana retrasada e já quer entender a gente? A Sofia é minha melhor amiga desde os dez anos.','n'),
+  N('E o pior: ele acredita no que diz. Dá pra ver. Ele se acha o melhor amigo dela.'),
+  N('Isso é o mais assustador. O vilão do capítulo não se vê como vilão. Nenhum deles se viu.'),
+  {jump:'c3_3'}
+],
+c3_2b:[ N('Depois da aula, a Sofia te encontra na escada. "Viu?", ela pergunta. Você viu.'), {jump:'c3_3'} ],
+c3_3: [
+  {day:'Quarta — a digitação'},
+  {bg:'salaCeline'},
+  N('Noite. Você tá no grupo da turma — trinta e dois alunos, memes, cobrança de trabalho.'),
+  {phone:['Turma 2ºB · 32 pessoas',[['you','<b>Pedro</b>alguém sabe se a prova de quinta caiu?'],['you','<b>Matheus</b>gente, sabiam que a Sofia'],['sys','Matheus está digitando…'],['sys','…'],['you','<b>Matheus</b>tá devendo um pastel pra mim? pois é. cobrem ela 😂'],['you','<b>Ju</b>kkkkk']]]},
+  N('O "está digitando" durou seis segundos. Você contou.'),
+  N('O celular vibra de novo. Agora no privado.'),
+  {phone:['Sofia',[['you','vc viu'],['you','ele começou a escrever meu nome'],['you','{nome}, ele IA contar. eu VI'],['me','eu vi tb'],['you','ele parou pq quis. dessa vez quis. e da próxima?'],['me','respira. amanhã a gente conversa pessoalmente. vc não tá sozinha nisso'],['you','eu não durmo mais direito sabia'],['you','fico esperando a próxima "brincadeira"']]]},
+  N('"Fico esperando a próxima." Isso tem nome: medo com hora marcada.'),
+  N('Ele nunca contou o segredo. Não precisou. O medo trabalha de graça, a noite inteira, todos os dias.'),
+  {jump:'c3_4'}
+],
+c3_4: [
+  {day:'Quinta — a cantina'},
+  {bg:'cantina'},
+  {show:'sofia',ex:'n',pos:'left'},{show:'matheus',ex:'h',pos:'right'},{fade:'sofia',lvl:1},
+  N('Depois que você percebe, não dá mais pra desperceber. É toda vez.'),
+  D('matheus','Vem no cinema. — Não posso. — "Se eu quisesse…" — Tá, eu vou.','c'),
+  D('matheus','Me empresta dez reais. — Tô sem. — "Lembra que eu sei de…?" — Toma.','c'),
+  {sinal:'c3s2'},
+  {fade:'sofia',lvl:2},
+  {show:'ju',ex:'n',pos:'center'},
+  D('ju','Sofia, você sumiu do rolê de sábado! Tô com saudade de você, viu.','n'),
+  {decoy:{q:'"Você sumiu do rolê! Tô com saudade de você."',who:'Juliana, colega da turma',d:'A Juliana sentiu falta e disse — sem cobrar, sem alfinetar. Sentir falta é afeto; usar a ausência contra a pessoa seria outra coisa. Repare na diferença.'}},
+  D('matheus','Conta pra eles por que você sumiu, Sofia. Ah, não… é segredo, né?','c'),
+  {sinal:'c3s3'},
+  N('A mesa riu sem entender. Só você e a Sofia entenderam. É exatamente isso que torna invisível.'),
+  N('Você olha pra ela. Ela tá dobrando o guardanapo em quadradinhos cada vez menores, até não dar mais pra dobrar.'),
+  {jump:'c3_5'}
+],
+c3_5: [
+  {day:'Quinta — depois da aula'},
+  {bg:'escada'},
+  {show:'sofia',ex:'s',pos:'center'},{fade:'sofia',lvl:2},
+  D('sofia','Eu sei que ele nunca vai contar. Acho. Mas eu faço tudo o que ele quer só pra não descobrir.','s'),
+  P('Sofia, ele não precisa contar. A ameaça já é a arma. Você paga ela todo dia.'),
+  D('sofia','…Todo dia.','s'),
+  D('sofia','Sabe o que dói mais? Não é o medo. É que era o MEU melhor amigo. Eu entreguei a arma na mão dele achando que tava entregando um peso.','s'),
+  {choice:['"E se você contasse pra sua irmã o que ele anda fazendo?"','"E se o segredo deixasse de ser segredo — do seu jeito, na sua hora?"'],go:['c3_5a','c3_5b']}
+],
+c3_5a:[
+  N('Naquela noite, ela contou pra irmã. Não o segredo — o que o Matheus fazia com ele.'),
+  {show:'irma',ex:'d',pos:'right'},
+  D('irma','Ele nunca contou? Só ameaça? Maninha, isso é pior. Contar seria uma vez. Ameaçar é todo dia.','d'),
+  {jump:'c3_6'}
+],
+c3_5b:[
+  D('sofia','Contar… eu? Tipo, eu escolher pra quem, quando, como?','k'),
+  P('Aí ele fica com as mãos vazias. Mas você não precisa decidir sozinha — fala com a sua irmã primeiro.'),
+  N('Ela falou. A irmã ouviu tudo e resumiu numa frase:'),
+  {show:'irma',ex:'d',pos:'right'},
+  D('irma','Contar seria uma vez. Ameaçar é todo dia. Tira essa arma da mão dele, do seu jeito.','d'),
+  {jump:'c3_6'}
+],
+c3_6: [
+  {day:'Sexta — o pátio'},
+  {bg:'patio'},
+  {show:'sofia',ex:'t',pos:'left'},{fade:'sofia',lvl:1},{show:'ju',ex:'n',pos:'right'},
+  N('Ela escolheu começar pela Juliana. Você ficou por perto, do jeito que ela pediu.'),
+  D('sofia','Ju. Meus pais tão se separando. E eu tô fazendo terapia. Pronto. Era esse o segredo.','d'),
+  D('ju','…Só isso? Sofia, os meus se separaram ano passado. Por que você não me contou antes?','s'),
+  D('sofia','Porque eu achava que era um peso.','s'),
+  D('ju','Não é peso. É vida.','h'),
+  {fade:'sofia',lvl:0},
+  {hide:'ju'},
+  {bg:'escada'},
+  {show:'sofia',ex:'d',pos:'left'},{show:'matheus',ex:'s',pos:'right'},
+  N('Fim do dia. A escada de sempre. Ele já sabia que ela tinha contado.'),
+  D('matheus','Eu não ia contar de verdade. Você sabe disso.','s'),
+  D('sofia','Eu sei. Você não precisava contar. Só precisava ameaçar. E eu fazia tudo.','d'),
+  D('matheus','…Era brincadeira.','s'),
+  D('sofia','Brincadeira a gente ri junto, Matheus. Eu nunca ri.','d'),
+  N('Ele abre a boca. Fecha. Pela primeira vez desde que você o conhece, ele não tem resposta pronta.'),
+  D('matheus','…Eu estraguei tudo, né?','s'),
+  D('sofia','Você trocou a minha confiança por obediência. Agora vai saber quanto custa.','d'),
+  N('Ela desce a escada até você. Ele fica lá em cima, sozinho com a frase.'),
+  N('Talvez ele aprenda. Talvez vire gente. Mas isso é problema dele agora — não dela.'),
+  {voz:true},
+  {fim:'c3'}
+],
+
+/* ---------- CAPÍTULO 4 · CELINE ---------- */
+c4_1: [
+  {save:'c4_1'},{chap:'c4'},
+  {day:'Um mês depois da mudança — sábado'},
+  {bg:'predio'},
+  N('O prédio já é sua casa. E a Celine virou aquela vizinha que rega suas plantas e te salva com açúcar às nove da noite.'),
+  N('Você já sabe o nome do cachorro da Paula. Já tem lugar fixo no grupo do condomínio. Já quase esqueceu o pacote aberto do primeiro dia.'),
+  N('Quase.'),
+  {show:'celine',ex:'h',pos:'center'},
+  D('celine','{nome}! Sábado vou receber duas amigas. Pizza, música baixa, coisa civilizada. Aparece!','h'),
+  {bg:'salaCeline',arg:true},
+  N('Sábado, 21h. Música baixa de verdade — você conferiu, por reflexo: não incomodava ninguém.'),
+  N('TOC. TOC. TOC. Na parede.'),
+  N('A sala inteira fica em silêncio. De novo: TOC. TOC.'),
+  {sinal:'c4s1'},
+  {show:'celine',ex:'t',pos:'center'},
+  D('celine','~A gente nem tá fazendo barulho.~ …Melhor abaixar, vai.','t'),
+  N('E aí você lembra. Sua primeira noite no prédio. As batidas que você ouviu através da parede.'),
+  N('Não era a primeira vez. Nunca é.'),
+  N('Quando você vai embora, encontra um papel dobrado embaixo da porta da Celine: "RESPEITE OS VIZINHOS", em letra de forma.'),
+  N('Letra de forma é a caligrafia dos covardes. Ninguém assina.'),
+  {jump:'c4_2'}
+],
+c4_2: [
+  {day:'Terça — o elevador'},
+  {bg:'hall'},
+  N('Você e a Celine voltando do trabalho e da escola, juntos por acaso. O Davi entra no térreo.'),
+  {show:'celine',ex:'n',pos:'left'},{show:'davi',ex:'h',pos:'right'},
+  D('davi','Chegando tarde de novo, hein, Celine? Moça solteira é assim mesmo.','c'),
+  {sinal:'c4s2'},
+  N('Ele diz isso olhando pra VOCÊ. Procurando plateia. Cúmplice.'),
+  {choice:['"Não entendi a graça."','Não rir — e olhar pra Celine, deixando claro o seu lado.'],go:['c4_2a','c4_2b']}
+],
+c4_2a:[ D('davi','Ih, que sério. Era brincadeira, gente!','k'), N('"Brincadeira." Você já ouviu essa palavra ser usada como escudo pelo Gael, pelo Matheus, e agora por ele. Você coleciona.'), {jump:'c4_3'} ],
+c4_2b:[ N('Você não ri. A piada morre no ar, sem plateia. Ele desce no quarto andar resmungando.'), D('celine','…Obrigada. A pior parte é rir sem graça só pra não criar caso. Eu tô cansada de rir sem graça.','n'), {jump:'c4_3'} ],
+c4_3: [
+  {day:'Quarta — a visita'},
+  {bg:'salaCeline'},
+  N('Noite. Batem na SUA porta. Três batidas educadas.'),
+  {show:'davi',ex:'h',pos:'center'},
+  D('davi','Boa noite, vizinho! Desculpa o horário. Posso falar uma coisa rapidinho?','h'),
+  D('davi','Você parece sensato. Estudioso, quieto, do bem. Não é como… certas pessoas do andar.','n'),
+  D('davi','Me ajuda a botar ordem nesse prédio. Eu cuido daqui como se fosse meu. Qualquer coisa que você ver ou ouvir do 402, me fala.','c'),
+  {sinal:'c4s6'},
+  N('"Eu cuido." De novo essa palavra. O Gael cuidava da Isis. O Arthur cuidava da Olívia. O Davi cuida do prédio.'),
+  N('Já reparou como certas pessoas só sabem cuidar de coisas que não pediram cuidado?'),
+  {choice:['"Não conte comigo pra isso."','"O que exatamente o 402 te fez?"'],go:['c4_3a','c4_3b']}
+],
+c4_3a:[ D('davi','…Entendi. Ela já te pegou também. Uma pena. Você parecia diferente.','x'), N('"Ela te pegou." Na cabeça dele, quem não está com ele foi capturado. Não existe a opção de você simplesmente ter enxergado.'), {jump:'c4_3c'} ],
+c4_3b:[ N('Ele abre a boca. Fecha. Recomeça três vezes. No final, a resposta verdadeira é: nada. Ela não fez nada.'), D('davi','Não é o que ela fez. É o… conjunto. Você vai entender quando morar aqui há mais tempo.','x'), N('O conjunto. A vida dela, ele quer dizer. O crime da Celine é existir sem pedir licença a ele.'), {jump:'c4_3c'} ],
+c4_3c: [
+  {hide:'davi'},
+  N('Ele vai embora. Você fecha a porta e fica um tempo parado no escuro da sala.'),
+  N('No dia seguinte, tem um papel dobrado embaixo da SUA porta: "CUIDADO COM QUEM VOCÊ ANDA".'),
+  N('Letra de forma. Sem assinatura. Seu estômago gela — e alguma coisa em você acorda de vez.'),
+  N('Agora é com você também. Sempre foi. Você só não tinha recebido o bilhete.'),
+  {jump:'c4_4'}
+],
+c4_4: [
+  {day:'Quinta — o hall'},
+  {bg:'hall'},
+  N('A Celine conversa com a Paula do 302 sobre o cachorro dela. Você chega junto.'),
+  {show:'paula',ex:'h',pos:'left'},{show:'celine',ex:'h',pos:'center'},
+  D('paula','Ele late pra tudo, mas é um amor. Passem lá qualquer dia, vocês dois!','h'),
+  {decoy:{q:'"Passem lá qualquer dia, vocês dois!"',who:'Paula, do 302',d:'Convite sem cobrança, sem segunda intenção. Vizinhança pode ser isso também — e é justamente por isso que o Davi vai precisar afastar a Paula.'}},
+  {show:'davi',ex:'h',pos:'right'},
+  D('davi','Cuidado com essa daí, Paula. Faz festa toda semana. Já vi de tudo entrando naquele apartamento. Brincadeira!','c'),
+  {sinal:'c4s3'},
+  D('paula','Ah, o Davi…','y'),
+  D('celine','~{s:Isso é mentira e você sabe.|Isso é mentira, porra.}~ …Ele gosta de brincar.','t'),
+  {fade:'celine',lvl:1},
+  N('A Paula riu sem jeito. Não viu nada — mas agora "ouviu falar". É assim que se planta.'),
+  N('E você lembra da frase do mercado, do seu primeiro domingo: "a menina que morava antes saiu às pressas. ninguém soube por quê".'),
+  N('Você começa a desconfiar que alguém soube. E mora na porta 401.'),
+  {jump:'c4_5'}
+],
+c4_5: [
+  {day:'Sexta — o grupo do condomínio'},
+  {bg:'salaCeline'},
+  N('Seu celular vibra. O grupo do prédio — você está nele desde a mudança.'),
+  {phone:['Condomínio Jardins · 23 pessoas',[['you','<b>Davi 401</b>Gente, precisamos conversar sobre o barulho do 402. E sobre a quantidade de visita. Não é nada pessoal.'],['you','<b>Seu Jorge 201</b>também notei'],['you','<b>Davi 401</b>e dizem que tem mais coisa, mas não vou falar aqui pra não expor ninguém 🙏'],['you','<b>Ana 502</b>😬']]]},
+  {sinal:'c4s4'},
+  N('"Dizem que tem mais coisa." Você mora na parede ao lado. Você sabe exatamente quanta "coisa" tem: nenhuma.'),
+  N('Vinte e três pessoas lendo. O silêncio de cada uma vale um voto pra ele.'),
+  {choice:['Responder no grupo: "Moro no 403, parede com parede, e nunca ouvi barulho do 402."','Chamar a Celine no privado antes de qualquer coisa.','Propor à Celine irem juntos falar com a síndica.'],go:['c4_5a','c4_5b','c4_5c']}
+],
+c4_5a:[
+  {phone:['Condomínio Jardins · 23 pessoas',[['me','Moro no 403, parede com parede com o 402, e nunca ouvi barulho. Nem sábado, que eu tava lá: música baixa, 21h.'],['you','<b>Davi 401</b>até você? ela te pegou também'],['me','Ninguém me pegou. Eu só moro do lado e conto o que ouço: nada.'],['you','<b>Ana 502</b>é verdade que o 403 é colado no 402…'],['you','<b>Paula 302</b>eu também nunca ouvi nada, pensando bem'],['you','<b>Seu Jorge 201</b>agora que falaram, eu ouvi foi batida na parede esses dias']]]},
+  N('Uma testemunha muda a matemática do boato. Duas viram maioria. E o Seu Jorge acabou de lembrar de que lado da parede vinham as batidas.'),
+  {fade:'celine',lvl:1},
+  {jump:'c4_6'}
+],
+c4_5b:[
+  {phone:['Celine 402',[['me','vi o grupo. você não tá sozinha nessa. o que você precisar, eu moro na parede ao lado'],['you','eu tava olhando a tela sem saber o que responder'],['you','sabe o que é pior? eu comecei a me perguntar se EU que sou o problema'],['me','não é. eu moro do lado. eu sei o que ouço: nada. e tenho bilhete, print e memória'],['you','obrigada. de verdade.'],['me','amanhã a gente fala com a síndica juntos?'],['you','juntos.']]]},
+  {fade:'celine',lvl:1},
+  {jump:'c4_6'}
+],
+c4_5c:[
+  N('Vocês desceram juntos no sábado de manhã. A Dona Marta ouviu tudo, de óculos na ponta do nariz, sem interromper.'),
+  {show:'marta',ex:'n',pos:'right'},
+  D('marta','Vim ouvir o seu lado, Celine. Ninguém tinha perguntado, né? Pois é. Ninguém nunca pergunta.','n'),
+  D('marta','E você, do 403… guarda esse bilhete. Guarda tudo. Papel tem mais memória que vizinho.','n'),
+  {fade:'celine',lvl:1},
+  {jump:'c4_6'}
+],
+c4_6: [
+  {day:'Sábado — o corredor'},
+  {bg:'predio'},
+  N('A Celine decidiu falar com ele. Cara a cara. Ela pediu uma coisa só: "fica por perto. Só… fica."'),
+  {show:'celine',ex:'d',pos:'left'},{fade:'celine',lvl:1},{show:'davi',ex:'n',pos:'right'},
+  D('celine','Davi. Isso para hoje. As batidas, os comentários, o grupo, os bilhetes.','d'),
+  D('davi','Celine… você tá levando tudo pro lado errado. Eu só tô brincando. Todo mundo aqui me conhece. Você que chegou e já criou caso.','c'),
+  {sinal:'c4s5'},
+  D('celine','Não é brincadeira. E eu não vou mais rir.','d'),
+  D('celine','E dessa vez tem testemunha. E registro. Datas, horários, prints do grupo, os bilhetes em letra de forma. Tudo.','d'),
+  N('Você não disse uma palavra. Não precisou. Estar ali, do lado dela, já era a frase inteira.'),
+  D('davi','…Vocês dois vão se dar mal nesse prédio.','x'),
+  D('celine','Anota essa também, {nome}.','d'),
+  N('Você anota. Data, hora, frase. O medo dele agora tem cartório.'),
+  {hide:'davi'},
+  {show:'marta',ex:'d',pos:'right'},
+  D('marta','Vai pra ata. Ele vai ser notificado por escrito. E se continuar, vira ocorrência — com tudo documentado.','d'),
+  D('marta','A moça que morava no 403 antes de você não tinha isso, sabe. Testemunha. Ela saiu daqui achando que o problema era ela.','n'),
+  N('A menina que saiu às pressas. Deixando a samambaia. Achando que o problema era ela.'),
+  N('Você olha pra Celine. Ela entendeu no mesmo segundo que você.'),
+  D('marta','Você não começou briga nenhuma, Celine. Você só parou de rir.','d'),
+  {fade:'celine',lvl:0},
+  {phone:['Condomínio Jardins · 23 pessoas',[['you','<b>Paula 302</b>gente, sábado que vem tem café no 302, quem aparece?'],['you','<b>Celine 402</b>eu!'],['me','o 403 leva o bolo 🍰'],['you','<b>Seu Jorge 201</b>se tiver café forte eu desço']]]},
+  {voz:true},
+  {fim:'c4'}
+],
+
+/* ---------- FINAL ---------- */
+final: [
+  {save:'final'},
+  {day:'Domingo — o café'},
+  {bg:'salaCeline',arg:true},
+  N('O café da Paula cresceu e mudou de andar: virou almoço na casa da Celine. Ela mandou você chamar quem quisesse.'),
+  N('Você chamou. E vieram.'),
+  {show:'isis',ex:'h',pos:'left'},{show:'olivia',ex:'h',pos:'center'},{show:'sofia',ex:'h',pos:'right'},
+  D('isis','Então foi aqui que tudo começou? O prédio da pessoa que repara nas coisas.','h'),
+  D('olivia','Foi alguém daqui que reparou nos meus brincos antes de mim.','h'),
+  D('sofia','E que ficou por perto na escada, sem fazer cara de pena.','h'),
+  {hide:'isis'},{show:'celine',ex:'h',pos:'left'},
+  D('celine','E que parou de rir na hora certa. Senta, {nome}. O bolo tá ótimo — e ninguém vai bater na parede hoje.','h'),
+  {hide:'all'},
+  {bg:'salaCeline'},
+  N('Naquela noite, com a casa cheirando a café, você faz uma coisa que vinha adiando.'),
+  N('Abre a caixa de "COISAS VELHAS". Pega a foto que estava virada pra baixo. Olha.'),
+  N('Você conhece essa história. É a razão de você ter ido embora da outra cidade. A pessoa da foto também tinha alguém por perto — e essa pessoa era você, e você não percebeu a tempo.'),
+  N('Todo mundo tem uma foto assim. Uma vez em que os sinais passaram batido.'),
+  N('Você não pode voltar. Mas pode fazer o que fez esse mês inteiro: nunca mais se distrair.'),
+  N('Você deixa a foto de pé na estante. Virada pra cima. Ela não é mais um peso. É um lembrete.'),
+  {bg:'final'},
+  N('Quatro histórias. Nenhuma delas era sua, {nome}. Você não viveu nenhuma por dentro.'),
+  N('Você fez outra coisa. Ficou por perto. Ouviu. Percebeu. Deu nome.'),
+  N('A violência invisível conta com duas coisas: o silêncio de quem sofre — e a distração de quem está do lado.'),
+  N('Dessa vez, você não se distraiu.'),
+  N('Não deixa marca. Deixa silêncio. E é invisível só enquanto ninguém dá nome.',{slow:true}),
+  {credits:true}
+]
+};
+
+/* ---------------- Executor ---------------- */
+let running=false, abortRun=false, curChap=null, runGen=0;
+let chapSinais=[], chapMoments=[];
+async function run(label){
+  if(running){ abortRun=true; await sleep(60); }
+  const gen=++runGen;
+  running=true; abortRun=false;
+  let cur=label;
+  while(cur){
+    const seq=SCRIPT[cur]; if(!seq){ console.error('label?',cur); break; }
+    let next=null;
+    for(let si=0; si<seq.length; si++){
+      const step=seq[si];
+      if(abortRun||gen!==runGen){ if(gen===runGen) running=false; return; }
+      if(Array.isArray(step)){ const [k,t,ex,o]=step; if(k!=='NARR'&&k!=='P'&&ex) show(k,ex); const nxt=seq[si+1]; const o2=Object.assign({}, o||{}, {bell: !!(nxt&&nxt.sinal)}); await say(k,t,o2); continue; }
+      if(step.save){ S.cur=step.save; save(); continue; }
+      if(step.chap){ curChap=step.chap; const c=CHAPTERS[curChap]; erased=[]; chapMoments=[]; chapSinais=c.sinais.map(s=>({...s})); Object.values(sprites).forEach(el=>{ el.classList.remove('fade1','fade2','dim'); el.dataset.lvl=0; }); continue; }
+      if(step.day){ await showDay(step.day); continue; }
+      if(step.bg){ setBG(step.bg, step.arg); await sleep(350); continue; }
+      if(step.show){ show(step.show,step.ex,step.pos); await sleep(250); continue; }
+      if(step.hide){ hide(step.hide); continue; }
+      if(step.fade!==undefined){ fade(step.fade,step.lvl); continue; }
+      if(step.fx){ await fx(step.fx); continue; }
+      if(step.jump){ next=step.jump; break; }
+      if(step.choice){ const i=await choice(step.choice); next=step.go[i]; break; }
+      if(step.phone){ await phone(step.phone[0], step.phone[1]); continue; }
+      if(step.sinal){ const sg=chapSinais.find(x=>x.id===step.sinal); if(sg){ chapMoments.push({kind:'sinal',s:sg}); if(!Array.isArray(seq[si-1])) bell(); } continue; }
+      if(step.decoy){ chapMoments.push({kind:'decoy',q:step.decoy.q,who:step.decoy.who,d:step.decoy.d}); continue; }
+      if(step.voz){ await restoreVoice(); continue; }
+      if(step.fim){ await endChapter(step.fim); running=false; return; }
+      if(step.credits){ await doCredits(); running=false; return; }
+    }
+    cur=next;
+  }
+  running=false;
+}
+async function restoreVoice(){
+  if(!erased.length) return;
+  await say('NARR','As coisas que ela não disse:');
+  for(const e of erased){ sfx('voz'); await say(CHAPTERS[curChap].prot, e, {voz:true, slow:true}); }
+}
+async function endChapter(id){
+  const c=CHAPTERS[id]; $('#textbox').classList.remove('on');
+  await fx('fadeout');
+  const g=S.g; const nSin=chapMoments.filter(m=>m.kind==='sinal').length;
+  const chapNum=Object.keys(CHAPTERS).indexOf(id)+1;
+  $('#endInner').innerHTML=`<div class="eyebrow">Capítulo ${chapNum} · ${c.title}</div><h2>Ligue os pontos</h2>
+    <p style="color:var(--ink2);font-size:15px;line-height:1.5">O sino tocou ${nSin} vez${nSin===1?'':'es'} nesta história, ${S.name}. Cada toque foi uma fala que parecia normal — e não era. Agora ligue cada uma ao padrão que ela esconde.</p>
+    <div id="quizHost"></div>
+    <div id="endRest" style="display:none">
+      <h2 style="margin-top:30px">O que aconteceu aqui?</h2>
+      <dl><dt>Nome</dt><dd>${c.fim.nome}</dd><dt>Por que é violência</dt><dd>${c.fim.porque}</dd><dt>O que quem está por perto pode fazer</dt><dd>${c.fim.ajuda}</dd></dl>
+      <div class="ajuda"><b>Onde buscar ajuda:</b> ${c.fim.onde}<br>Se alguma parte dessa história pareceu com a sua, ${S.name}, você não está sozinh${g}. Falar com alguém é o primeiro passo — e não precisa ser o último.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button id="contStory">Continuar a história →</button><button id="endCad" style="background:transparent;color:var(--wine);border:2px solid var(--wine)">Caderno de Padrões</button></div>
+    </div>`;
+  hide('all'); $('#endChap').classList.add('on'); $('#fadeblack').style.opacity=0; $('#endChap').scrollTop=0;
+  const score=await quiz($('#quizHost'), chapMoments, id);
+  S.done[id]=true; S.sin[id]={got:score,total:chapMoments.filter(m=>m.kind==='sinal').length+(chapMoments.some(m=>m.kind==='decoy')?1:0)};
+  const nx=c.next; S.cur = nx==='final' ? 'final' : CHAPTERS[nx].start; save();
+  $('#endRest').style.display='block';
+  $('#endCad').onclick=openCaderno;
+  $('#contStory').onclick=()=>{ sfx('click'); $('#endChap').classList.remove('on'); run(S.cur); };
+}
+async function doCredits(){
+  $('#textbox').classList.remove('on'); await fx('fadeout'); hide('all');
+  const tot=Object.values(S.sin).reduce((a,b)=>a+b.got,0), totT=Object.values(S.sin).reduce((a,b)=>a+b.total,0);
+  $('#credits').innerHTML=`<div class="inner"><h1>Nas Entrelinhas</h1>
+    <div class="q">"Não deixa marca. Deixa silêncio.<br>Invisível só enquanto ninguém dá nome."</div>
+    <p>Obrigad${S.g==='e'?'e':S.g} por jogar, <b>${S.name}</b>. Você ligou ${tot} de ${totT} pontos e reconheceu ${Object.keys(S.pat||{}).length} dos ${Object.keys(PATTERNS).length} padrões do Caderno.</p>
+    <div class="help"><b>Se você precisar de ajuda — ou conhecer alguém que precise:</b><br>
+      <b>Disque 100</b> — Direitos Humanos (crianças, adolescentes, qualquer violação)<br>
+      <b>Ligue 180</b> — Central de Atendimento à Mulher<br>
+      <b>CVV 188</b> — apoio emocional, 24h, gratuito (cvv.org.br)<br>
+      <b>Conselho Tutelar</b> da sua cidade · <b>Orientação educacional</b> da sua escola<br>
+      <b>Delegacia</b> (registro de ocorrência) · <b>Defensoria Pública</b></div>
+    <p style="font-size:14px;opacity:.7">Isis, Gael, Olívia, Arthur, Sofia, Matheus, Celine e Davi são personagens fictícios. Qualquer semelhança com a vida real é o motivo deste jogo existir.<br>Protótipo com arte provisória gerada por código.</p>
+    <button id="credBack">Voltar ao título</button></div>`;
+  $('#credits').classList.add('on'); $('#fadeblack').style.opacity=0; S.finalSeen=true; S.cur=null; save();
+  $('#credBack').onclick=()=>{ $('#credits').classList.remove('on'); showTitle(); };
+}
+
+/* ---------------- Telas ---------------- */
+function showTitle(){
+  $('#textbox').classList.remove('on'); hide('all');
+  $('#endChap').classList.remove('on');
+  $('#title').classList.add('on');
+  $('#titleGirls').innerHTML=['celine','sofia','olivia','isis'].map(k=>`<div class="tg">${spriteSVG(k, S.finalSeen?'h':'n')}</div>`).join('');
+  $('#mCont').disabled=!(S.name && S.cur);
+  $('#mNew').textContent = (S.name && (S.cur||Object.keys(S.done).length)) ? 'Começar de novo' : 'Começar';
+  audioInit(); music(true);
+}
+function askConfirm(q){ return new Promise(res=>{ $('#askQ').textContent=q; $('#ask').classList.add('on'); $('#askYes').onclick=()=>{ sfx('click'); $('#ask').classList.remove('on'); res(true); }; $('#askNo').onclick=()=>{ sfx('click'); $('#ask').classList.remove('on'); res(false); }; }); }
+function askName(){
+  return new Promise(res=>{
+    const ov=$('#nameScreen'); ov.classList.add('on'); const inp=$('#nameInput'); inp.value=S.name||''; setTimeout(()=>inp.focus(),50);
+    let g=S.g||'o'; const row=$('#genderRow'); const upd=()=>{ $('#nmG').textContent=g; $('#nmG2').textContent=g; };
+    [...row.children].forEach(b=>{ b.classList.toggle('sel',b.dataset.g===g); b.onclick=()=>{ g=b.dataset.g; [...row.children].forEach(x=>x.classList.toggle('sel',x===b)); upd(); }; }); upd();
+    const go=()=>{ const v=inp.value.trim(); if(!v){ inp.style.borderColor='#c0392b'; inp.focus(); return; } S.name=v; S.g=g; save(); ov.classList.remove('on'); sfx('ok'); res(); };
+    $('#nameGo').onclick=go; inp.onkeydown=e=>{ if(e.key==='Enter'){ e.stopPropagation(); go(); } };
+  });
+}
+async function showIntro(){
+  hide('all'); audioInit(); music(false);
+  setBG('black'); await sleep(600);
+  await say('NARR', 'Existe uma violência que não deixa marca no corpo.', {slow:true});
+  await say('NARR', 'Ela não grita. Ela mora em frases ditas com um sorriso.', {slow:true});
+  await say('NARR', '"Eu só tô cuidando de você."', {slow:true});
+  await say('NARR', '"Se você gostasse de mim…"', {slow:true});
+  await say('NARR', '"Relaxa. Era brincadeira."', {slow:true});
+  await say('NARR', 'Quem vive isso costuma demorar anos para dar nome ao que sentiu. Muitos nunca dão. Porque, de fora, parece cuidado. Parece ciúme. Parece piada.', {slow:true});
+  await say('NARR', 'A história deste jogo é fictícia. O que acontece nela acontece todos os dias — em casas, escolas, prédios e conversas de celular deste país.', {slow:true});
+  await say('NARR', `${S.name}, você não vai viver nenhuma dessas violências na pele. Você vai fazer o papel mais importante que existe fora da ficção:`, {slow:true});
+  await say('NARR', 'o de quem está por perto — e percebe.', {slow:true});
+  await say('NARR', 'Leia com atenção. Quando uma fala esconder algo, um sino vai tocar. Baixo. Como na vida real.', {slow:true});
+  $('#textbox').classList.remove('on'); await sleep(500); bell(); await sleep(2200); music(true);
+  run('pro_1');
+}
+$('#mNew').onclick=async()=>{ sfx('click'); if(S.name && (S.cur||Object.keys(S.done).length) && !(await askConfirm('Começar de novo apaga o progresso da história. Continuar?'))) return; const nm=S.name,g=S.g,st=S.strong; S=defaultState(); S.name=nm; S.g=g; S.strong=st; save(); $('#title').classList.remove('on'); askName().then(()=>{ $('#wG').textContent=S.g; showIntro(); }); };
+$('#mCont').onclick=()=>{ sfx('click'); if(!S.cur) return; $('#title').classList.remove('on'); audioInit(); music(true); run(S.cur); };
+$('#mCred').onclick=()=>{ $('#credits').innerHTML=`<div class="inner"><h1>Sobre o jogo</h1><p>Uma visual novel educativa sobre <b>violência invisível</b> — a violência psicológica que acontece em relações do dia a dia: entre irmãos, no namoro, numa amizade, entre vizinhos.</p><p>Você se muda para uma cidade nova e vai conhecendo as pessoas aos poucos. Quanto mais perto você chega, mais consegue ver o que ninguém de fora vê — e aprende a dar nome aos padrões.</p><p style="font-size:14px;opacity:.7">Protótipo v0.2 · personagens e cenários provisórios gerados por código, para serem substituídos pelos desenhos da equipe.</p><button id="credBack">Voltar</button></div>`; $('#credits').classList.add('on'); $('#credBack').onclick=()=>$('#credits').classList.remove('on'); };
+function openOptions(){ $('#optSound').checked=!muted; $('#optStrong').checked=!!S.strong; $('#options').classList.add('on'); }
+$('#mOpt').onclick=()=>{ sfx('click'); openOptions(); };
+$('#btnOpt').onclick=()=>{ if($('#options').classList.contains('on')) return; openOptions(); };
+$('#optSound').onchange=e=>{ muted=!e.target.checked; $('#btnMute').textContent=muted?'🔇':'🔊'; };
+$('#optStrong').onchange=e=>{ S.strong=e.target.checked; save(); };
+$('#optClose').onclick=()=>{ sfx('click'); $('#options').classList.remove('on'); };
+$('#btnHome').onclick=async()=>{ if($('#ask').classList.contains('on')||$('#nameScreen').classList.contains('on')) return; if($('#title').classList.contains('on')) return; if(running && !(await askConfirm('Voltar ao menu? Você continua depois do último ponto salvo.'))) return; abortRun=true; setTimeout(()=>{ if(waitClick) waitClick(); ['#choices','#phone','#caderno','#options'].forEach(s=>$(s).classList.remove('on')); $('#daycard').classList.remove('on'); $('#endChap').classList.remove('on'); $('#credits').classList.remove('on'); showTitle(); },80); };
+
+/* ---------------- Boot ---------------- */
+$('#warnOk').onclick=()=>{ $('#warn').style.display='none'; audioInit(); load(); $('#wG').textContent=S.g||'o'; showTitle();
+  // celular: tenta tela cheia + travar em paisagem (se o navegador deixar)
+  if(matchMedia('(pointer:coarse)').matches){ try{ const p=document.documentElement.requestFullscreen?document.documentElement.requestFullscreen():Promise.reject(); p.then(()=>{ if(screen.orientation&&screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{}); }).catch(()=>{}); }catch(e){} }
+};
+if(matchMedia('(pointer:coarse)').matches) $('#hint').textContent='toque para avançar';
+</script>
+</body>
+</html>
