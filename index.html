@@ -430,8 +430,36 @@ function tone(f,dur=.3,type='sine',vol=.06){ if(!AC||muted) return; const o=AC.c
 function sfx(k){ if(k==='click') tone(660,.05,'triangle',.015); if(k==='ok'){tone(523,.15,'triangle',.04);setTimeout(()=>tone(784,.3,'triangle',.04),120);} if(k==='voz'){tone(880,.5,'sine',.04);} if(k==='right'){tone(659,.12,'triangle',.04);setTimeout(()=>tone(988,.35,'triangle',.04),110);} if(k==='wrong'){tone(220,.35,'triangle',.035);} }
 function bellSound(){ if(!AC||muted) return; const t0=AC.currentTime; [[880,.05,2.6],[1760,.022,1.8],[2637,.012,1.2],[3520,.006,.8]].forEach(([f,v,d])=>{ const o=AC.createOscillator(),g=AC.createGain(); o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(v,t0+.012); g.gain.exponentialRampToValueAtTime(.0001,t0+d); o.connect(g).connect(AC.destination); o.start(t0); o.stop(t0+d+.05); }); }
 function bell(){ bellSound(); const b=$('#bell'); b.classList.remove('ring'); void b.offsetWidth; b.classList.add('ring'); }
-const PAD=[[261.6,0],[329.6,2],[392,4],[329.6,6],[293.7,8],[349.2,10],[440,12],[349.2,14]];
-function music(on){ clearInterval(musicTimer); if(!on||!AC) return; let step=0; musicTimer=setInterval(()=>{ if(muted){step++;return;} const s=step%16; const n=PAD.find(m=>m[1]===s); if(n) tone(n[0]/2, 1.6,'sine',.035); if(s%8===0) tone(130.8,3,'triangle',.025); step++; },500); }
+/* trilha adaptativa: menu / leve / tensao / emotivo */
+let musicMode='off';
+function padNote(f,dur,vol,type='sine',cut=900){ if(!AC||muted) return; const t0=AC.currentTime; const o=AC.createOscillator(),g=AC.createGain(),fl=AC.createBiquadFilter(); o.type=type; o.frequency.value=f; fl.type='lowpass'; fl.frequency.value=cut; g.gain.setValueAtTime(0.0001,t0); g.gain.linearRampToValueAtTime(vol,t0+dur*0.3); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur); o.connect(fl).connect(g).connect(AC.destination); o.start(t0); o.stop(t0+dur+.05); }
+const MOODCFG={
+  menu:   {beat:2100, chords:[[220,261.6,329.6],[196,246.9,293.7],[174.6,220,261.6],[196,233.1,293.7]], vol:.032, type:'sine',   spark:.20, sparkNotes:[523.3,659.3,784], bass:.028},
+  leve:   {beat:1500, chords:[[261.6,329.6,392],[293.7,349.2,440],[246.9,293.7,392],[261.6,349.2,440]], vol:.026, type:'triangle',spark:.45, sparkNotes:[784,880,1046.5], bass:.022},
+  tensao: {beat:2600, chords:[[110,130.8,155.6],[103.8,123.5,155.6]],                                   vol:.040, type:'sine',   spark:.10, sparkNotes:[622.3,466.2],    bass:0, dark:true},
+  emotivo:{beat:1800, chords:[[220,261.6,329.6,392],[174.6,220,261.6,349.2],[196,246.9,293.7,349.2],[164.8,207.7,246.9,329.6]], vol:.030, type:'sine', spark:.55, sparkNotes:[523.3,587.3,659.3,784], bass:.026},
+};
+function music(mode){
+  if(mode===true) mode='menu'; if(mode===false||!mode) mode='off';
+  if(mode===musicMode) return; musicMode=mode; clearInterval(musicTimer); if(mode==='off'||!AC) return;
+  const c=MOODCFG[mode]; let bar=0;
+  const play=()=>{ if(muted||musicMode!==mode) return;
+    const ch=c.chords[bar%c.chords.length];
+    ch.forEach((f,i)=>setTimeout(()=>padNote(f, c.beat/1000*1.9, c.vol, c.type, c.dark?520:900), i*(c.dark?260:120)));
+    if(c.bass) padNote(ch[0]/2, c.beat/1000*2.1, c.bass, 'triangle', 400);
+    if(c.dark){ padNote(55, .16, .05, 'sine', 200); setTimeout(()=>padNote(55,.12,.035,'sine',200), 420); if(Math.random()<.18) setTimeout(()=>padNote(c.sparkNotes[bar%c.sparkNotes.length], 2.4, .012, 'sine', 1400), c.beat*.55); }
+    else if(Math.random()<c.spark) setTimeout(()=>padNote(c.sparkNotes[Math.floor(Math.random()*c.sparkNotes.length)], 1.4, .022, 'triangle', 1600), c.beat*(.3+Math.random()*.4));
+    bar++;
+  };
+  play(); musicTimer=setInterval(play, c.beat);
+}
+/* clima padrão por cena */
+const MOODS={ pro_1:'leve', pro_2:'leve', pro_3:'tensao',
+  c1_1:'leve', c1_1b:'leve', c1_2:'leve', c1_2a:'tensao', c1_2b:'tensao', c1_2c:'tensao', c1_3:'leve', c1_3a:'tensao', c1_3b:'tensao', c1_3c:'tensao', c1_3d:'tensao', c1_3e:'tensao', c1_4:'emotivo', c1_4a:'emotivo', c1_4b:'emotivo', c1_4c:'emotivo', c1_4x:'emotivo', c1_5:'tensao', c1_6:'emotivo',
+  c2_1:'leve', c2_2:'leve', c2_2a:'leve', c2_2b:'leve', c2_3:'leve', c2_3a:'leve', c2_3b:'leve', c2_4:'tensao', c2_4a:'tensao', c2_4b:'tensao', c2_4c:'tensao', c2_5:'tensao', c2_6:'emotivo', c2_6a:'emotivo', c2_6b:'emotivo', c2_6c:'emotivo', c2_6x:'emotivo', c2_7:'emotivo',
+  c3_1:'leve', c3_2:'leve', c3_2a:'tensao', c3_2b:'tensao', c3_3:'tensao', c3_4:'tensao', c3_5:'emotivo', c3_5a:'emotivo', c3_5b:'emotivo', c3_6:'emotivo',
+  c4_1:'leve', c4_2:'tensao', c4_2a:'tensao', c4_2b:'tensao', c4_3:'tensao', c4_3a:'tensao', c4_3b:'tensao', c4_3c:'tensao', c4_4:'leve', c4_5:'tensao', c4_5a:'tensao', c4_5b:'tensao', c4_5c:'tensao', c4_6:'tensao',
+  final:'emotivo' };
 $('#btnMute').onclick=()=>{ muted=!muted; $('#btnMute').textContent=muted?'🔇':'🔊'; };
 
 /* ---------------- Render ---------------- */
@@ -608,6 +636,7 @@ pro_3: [
   N('Você não está pronto pra ela. Talvez nunca esteja.'),
   N('Aí você ouve. Do outro lado da parede: TOC. TOC. TOC. Alguém batendo. Depois, silêncio.'),
   N('Você ainda não sabe o que isso significa. Vai saber.'),
+  {music:'leve'},
   {day:'Domingo — o mercado'},
   {bg:'praca'},
   N('A Celine te levou ao mercado "pra você não comprar arroz da marca errada como um turista".'),
@@ -666,6 +695,7 @@ c1_2: [
   P('Namorado?'),
   D('isis','Téo. Um mês e três dias. Não que eu esteja contando.','y'),
   D('isis','Ele é do outro colégio. A gente se conheceu no campeonato de handebol. Ele perdeu feio e mesmo assim veio falar comigo, então é corajoso.','h'),
+  {music:'tensao'},
   N('A porta abre. Sem bater.'),
   {show:'gael',ex:'h',pos:'right'},
   D('gael','Com quem cê tá falando?','h'),
@@ -696,6 +726,7 @@ c1_3: [
   N('Você precisa saber disso. Porque é isso que torna o resto difícil de ver.'),
   {show:'mae',ex:'n',pos:'left'},{show:'isis',ex:'n',pos:'center'},{fade:'isis',lvl:1},{show:'gael',ex:'h',pos:'right'},
   D('mae','E o cursinho, Isis? Tá dando conta?','n'),
+  {music:'tensao'},
   D('gael','A Isis anda bem distraída ultimamente. Né, Isis?','c'),
   {sinal:'c1s2'},
   N('Você vê. O garfo dela para no ar. Um segundo longo demais.'),
@@ -812,6 +843,7 @@ c2_2: [
   D('be','Gente, a Oli contando piada de novo! Tava com saudade disso.','h'),
   D('lara','Ela era mais barulhenta, sabe, {nome}? No bom sentido. Tipo os brincos.','n'),
   N('"Era." O verbo no passado passa voando. Quase ninguém pega.'),
+  {music:'tensao'},
   N('O celular dela vibra. E vibra. E vibra. Ela pede licença e mostra a tela pra você, tipo quem pede socorro rindo.'),
   {phone:['Arthur',[['you','vc tá onde'],['you','oi?'],['you','tá com elas de novo?'],['you','eu tava querendo te ver hoje'],['you','deixa. divirta-se.'],['you','sério, se vc gostasse de mim de verdade preferia ficar comigo. mas tudo bem']]]},
   {sinal:'c2s2'},
@@ -830,6 +862,7 @@ c2_3: [
   D('rafa','Fechamos a parte 3 hoje? Te mando o resto no zap, Olívia.','n'),
   D('olivia','Fechado!','h'),
   {hide:'rafa'},{show:'arthur',ex:'n',pos:'right'},
+  {music:'tensao'},
   N('O Arthur ouviu. Esperou o Rafa virar o corredor.'),
   D('arthur','Esse cara tá na sua. Eu percebo essas coisas. Sai desse grupo.','n'),
   D('olivia','É trabalho de escola, Arthur. {nome} tá no grupo também!','t'),
@@ -925,6 +958,7 @@ c3_1: [
   N('Ela é a pessoa mais organizada que você já conheceu. Resumos com três cores de caneta. Agenda com adesivos. Tudo no lugar.'),
   N('Você já aprendeu a ler isso também: às vezes a pessoa organiza o caderno porque não consegue organizar o resto.'),
   {show:'sofia',ex:'n',pos:'center'},
+  {music:'emotivo'},
   D('sofia','Posso te contar uma coisa? Promete que não conta pra ninguém? Ninguém mesmo?','s'),
   P('Prometo.'),
   D('sofia','Meus pais estão se separando. E eu comecei a fazer terapia. Ninguém da escola sabe. Só o Matheus.','s'),
@@ -941,6 +975,7 @@ c3_2: [
   D('matheus','Sofia, me passa a sua parte que eu mudo umas palavras e pronto, tá feito.','h'),
   D('sofia','Não. Faz a sua, a prof percebe.','n'),
   D('matheus','{s:Nossa, que amiga.|Nossa, que amiga do caralho.}','a'),
+  {music:'tensao'},
   D('matheus','Se eu quisesse, podia contar pra todo mundo o que você me falou, sabia? Brincadeira.','c'),
   {sinal:'c3s1'},
   N('Ele riu. Ela não. Ela abriu o caderno e passou a parte dela.'),
@@ -1050,6 +1085,7 @@ c4_1: [
   D('celine','{nome}! Sábado vou receber duas amigas. Pizza, música baixa, coisa civilizada. Aparece!','h'),
   {bg:'salaCeline',arg:true},
   N('Sábado, 21h. Música baixa de verdade — você conferiu, por reflexo: não incomodava ninguém.'),
+  {music:'tensao'},
   N('TOC. TOC. TOC. Na parede.'),
   N('A sala inteira fica em silêncio. De novo: TOC. TOC.'),
   {sinal:'c4s1'},
@@ -1104,6 +1140,7 @@ c4_4: [
   D('paula','Ele late pra tudo, mas é um amor. Passem lá qualquer dia, vocês dois!','h'),
   {decoy:{q:'"Passem lá qualquer dia, vocês dois!"',who:'Paula, do 302',d:'Convite sem cobrança, sem segunda intenção. Vizinhança pode ser isso também — e é justamente por isso que o Davi vai precisar afastar a Paula.'}},
   {show:'davi',ex:'h',pos:'right'},
+  {music:'tensao'},
   D('davi','Cuidado com essa daí, Paula. Faz festa toda semana. Já vi de tudo entrando naquele apartamento. Brincadeira!','c'),
   {sinal:'c4s3'},
   D('paula','Ah, o Davi…','y'),
@@ -1159,6 +1196,7 @@ c4_6: [
   N('Você anota. Data, hora, frase. O medo dele agora tem cartório.'),
   {hide:'davi'},
   {show:'marta',ex:'d',pos:'right'},
+  {music:'emotivo'},
   D('marta','Vai pra ata. Ele vai ser notificado por escrito. E se continuar, vira ocorrência — com tudo documentado.','d'),
   D('marta','A moça que morava no 403 antes de você não tinha isso, sabe. Testemunha. Ela saiu daqui achando que o problema era ela.','n'),
   N('A menina que saiu às pressas. Deixando a samambaia. Achando que o problema era ela.'),
@@ -1211,6 +1249,7 @@ async function run(label){
   let cur=label;
   while(cur){
     const seq=SCRIPT[cur]; if(!seq){ console.error('label?',cur); break; }
+    if(MOODS[cur]) music(MOODS[cur]);
     let next=null;
     for(let si=0; si<seq.length; si++){
       const step=seq[si];
@@ -1224,6 +1263,7 @@ async function run(label){
       if(step.hide){ hide(step.hide); continue; }
       if(step.fade!==undefined){ fade(step.fade,step.lvl); continue; }
       if(step.fx){ await fx(step.fx); continue; }
+      if(step.music){ music(step.music); continue; }
       if(step.jump){ next=step.jump; break; }
       if(step.choice){ const i=await choice(step.choice); next=step.go[i]; break; }
       if(step.phone){ await phone(step.phone[0], step.phone[1]); continue; }
@@ -1243,7 +1283,7 @@ async function restoreVoice(){
   for(const e of erased){ sfx('voz'); await say(CHAPTERS[curChap].prot, e, {voz:true, slow:true}); }
 }
 async function endChapter(id){
-  const c=CHAPTERS[id]; $('#textbox').classList.remove('on');
+  const c=CHAPTERS[id]; $('#textbox').classList.remove('on'); music('menu');
   await fx('fadeout');
   const g=S.g; const nSin=chapMoments.filter(m=>m.kind==='sinal').length;
   const chapNum=Object.keys(CHAPTERS).indexOf(id)+1;
@@ -1265,7 +1305,7 @@ async function endChapter(id){
   $('#contStory').onclick=()=>{ sfx('click'); $('#endChap').classList.remove('on'); run(S.cur); };
 }
 async function doCredits(){
-  $('#textbox').classList.remove('on'); await fx('fadeout'); hide('all');
+  $('#textbox').classList.remove('on'); music('emotivo'); await fx('fadeout'); hide('all');
   const tot=Object.values(S.sin).reduce((a,b)=>a+b.got,0), totT=Object.values(S.sin).reduce((a,b)=>a+b.total,0);
   $('#credits').innerHTML=`<div class="inner"><h1>Nas Entrelinhas</h1>
     <div class="q">"Não deixa marca. Deixa silêncio.<br>Invisível só enquanto ninguém dá nome."</div>
