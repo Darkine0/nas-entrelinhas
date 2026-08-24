@@ -398,29 +398,200 @@ function spriteSVG(k, ex='n', lvl=0){
   return `<svg viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">${h.back}${clothSVG(c)}<rect x="90" y="165" width="20" height="30" fill="${shade(c.skin,-12)}"/><circle cx="100" cy="120" r="56" fill="${c.skin}"/>${blush}${browsSVG(ex)}${eyesSVG(ex,'#3a2a20')}${mouthSVG(ex)}${h.front}${accSVG(c,ex,lvl)}</svg>`;
 }
 
-/* ---------------- Cenários ---------------- */
+/* ---------------- Cenários (pegada brasileira) ---------------- */
 const W=1600,H=900;
-function room(wall, floor, extra=''){ return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice"><rect width="${W}" height="${H}" fill="${wall}"/><rect y="610" width="${W}" height="290" fill="${floor}"/><rect y="600" width="${W}" height="14" fill="${shade(floor,-30)}"/>${extra}</svg>`; }
-function window_(x,y,w,h,sky='#bfe6ff'){ return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${sky}" stroke="#fff" stroke-width="14"/><path d="M${x+w/2} ${y}v${h}M${x} ${y+h/2}h${w}" stroke="#fff" stroke-width="10"/>`; }
-function door(x,label,col='#a87a4a'){ return `<rect x="${x}" y="300" width="170" height="310" fill="${col}" stroke="${shade(col,-30)}" stroke-width="6"/><circle cx="${x+140}" cy="460" r="8" fill="#ddd"/><rect x="${x+55}" y="330" width="60" height="26" fill="#eee"/><text x="${x+85}" y="350" font-size="20" text-anchor="middle" font-family="sans-serif" fill="#333">${label}</text>`; }
-function table(x,y,w,col='#c9945a'){ return `<rect x="${x}" y="${y}" width="${w}" height="26" fill="${col}"/><rect x="${x+20}" y="${y+26}" width="26" height="130" fill="${shade(col,-20)}"/><rect x="${x+w-46}" y="${y+26}" width="26" height="130" fill="${shade(col,-20)}"/>`; }
-function tree(x,y,s=1){ return `<rect x="${x-12*s}" y="${y-80*s}" width="${24*s}" height="${120*s}" fill="#6b4a2a"/><circle cx="${x}" cy="${y-120*s}" r="${70*s}" fill="#4f9d4f"/><circle cx="${x-45*s}" cy="${y-90*s}" r="${50*s}" fill="#5fae5f"/><circle cx="${x+45*s}" cy="${y-95*s}" r="${55*s}" fill="#449344"/>`; }
-function outside(sky1,sky2,ground,extra=''){ return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky1}"/><stop offset="1" stop-color="${sky2}"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#g)"/><rect y="620" width="${W}" height="280" fill="${ground}"/>${extra}</svg>`; }
+let __bg=0;
+const DEFS=x=>`<defs>${x}<radialGradient id="vin${__bg}" cx="50%" cy="42%" r="80%"><stop offset="58%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".30"/></radialGradient></defs>`;
+const VIN=()=>`<rect width="${W}" height="${H}" fill="url(#vin${__bg})"/>`;
+const CEU=(c1,c2,c3)=>`<linearGradient id="ceu${__bg}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset=".55" stop-color="${c2}"/><stop offset="1" stop-color="${c3}"/></linearGradient>`;
+const nuvens=(o=.85)=>[[260,120,1],[850,72,1.5],[1370,150,.9]].map(([x,y,s])=>`<g opacity="${o}" transform="translate(${x} ${y}) scale(${s})"><ellipse rx="90" ry="26" fill="#fff"/><ellipse cx="58" cy="-15" rx="58" ry="21" fill="#fff"/><ellipse cx="-60" cy="-9" rx="52" ry="19" fill="#fff"/></g>`).join('');
+const fios=y=>`<path d="M0 ${y} Q400 ${y+48} 800 ${y+10} T1600 ${y+34}" stroke="#2b2b2b" stroke-width="4" fill="none" opacity=".85"/><path d="M0 ${y+28} Q420 ${y+74} 820 ${y+36} T1600 ${y+60}" stroke="#2b2b2b" stroke-width="3" fill="none" opacity=".8"/><path d="M0 ${y+54} Q380 ${y+94} 790 ${y+62} T1600 ${y+86}" stroke="#2b2b2b" stroke-width="2.5" fill="none" opacity=".7"/>`;
+const poste=(x,top=180)=>`<rect x="${x}" y="${top}" width="16" height="${640-top}" fill="#4e4a45"/><rect x="${x-44}" y="${top}" width="104" height="10" fill="#4e4a45"/><rect x="${x-30}" y="${top+26}" width="76" height="8" fill="#4e4a45"/><circle cx="${x+8}" cy="${top+70}" r="9" fill="#37322e"/>`;
+const pipa=(x,y,c='#ffd23f',s=1)=>`<g transform="translate(${x} ${y}) scale(${s}) rotate(14)"><path d="M0 -44 L28 0 L0 44 L-28 0 Z" fill="${c}" stroke="${shade(c,-50)}" stroke-width="2"/><path d="M0 -44 V44 M-28 0 H28" stroke="#0005" stroke-width="2"/><path d="M0 44 q12 24 -4 44 q-16 20 2 42" stroke="#ffffffcc" stroke-width="3" fill="none"/></g>`;
+const palmeira=(x,y,s=1)=>`<g transform="translate(${x} ${y}) scale(${s})"><path d="M-6 0 Q-18 -120 8 -212" stroke="#7a5230" stroke-width="17" fill="none"/>${[-150,-105,-60,-15,15,60,105,150].map(a=>{const r=a*Math.PI/180;return `<path d="M8 -210 q${Math.cos(r)*90} ${-46+Math.sin(r)*26} ${Math.cos(r)*150} ${-14+Math.sin(r)*60}" stroke="#2e7d32" stroke-width="11" fill="none" stroke-linecap="round"/>`;}).join('')}<circle cx="8" cy="-206" r="11" fill="#5d4037"/></g>`;
+const ipe=(x,y,cor='#ffd23f',s=1)=>`<g transform="translate(${x} ${y}) scale(${s})"><rect x="-11" y="-10" width="22" height="92" fill="#6d4c41"/><path d="M0 0 Q-10 -70 -36 -112 M0 0 Q6 -82 40 -124 M0 -6 Q0 -64 -4 -98" stroke="#6d4c41" stroke-width="13" fill="none"/>${[[-64,-150,54],[18,-184,62],[76,-142,48],[-16,-132,42],[46,-106,32],[-78,-106,32],[0,-96,26]].map(([a,b,r])=>`<circle cx="${a}" cy="${b}" r="${r}" fill="${cor}"/>`).join('')}${[[-32,-166],[42,-154],[2,-196],[-74,-128],[76,-116],[-10,-104]].map(([a,b])=>`<circle cx="${a}" cy="${b}" r="13" fill="${shade(cor,25)}" opacity=".8"/>`).join('')}<circle cx="120" cy="30" r="4" fill="${cor}"/><circle cx="-100" cy="46" r="4" fill="${cor}"/><circle cx="66" cy="58" r="4" fill="${cor}"/></g>`;
+const casinha=(x,cor,alt=250,tel='#9a4b3b')=>`<g><rect x="${x-8}" y="${620-alt-20}" width="252" height="22" fill="${tel}"/><rect x="${x-8}" y="${620-alt-24}" width="252" height="7" fill="${shade(tel,-25)}"/><rect x="${x}" y="${620-alt}" width="236" height="${alt}" fill="${cor}"/><rect x="${x}" y="${620-alt}" width="236" height="24" fill="${shade(cor,-28)}"/><rect x="${x+24}" y="${620-alt+54}" width="66" height="80" rx="4" fill="#dceefc" stroke="${shade(cor,-45)}" stroke-width="5"/><path d="M${x+24} ${620-alt+94} h66 M${x+57} ${620-alt+54} v80" stroke="${shade(cor,-45)}" stroke-width="3"/><rect x="${x+138}" y="${620-alt+64}" width="70" height="${alt-64}" fill="${shade(cor,-50)}"/><rect x="${x+145}" y="${620-alt+72}" width="56" height="${alt-102}" rx="3" fill="${shade(cor,-20)}"/><circle cx="${x+192}" cy="${620-alt+130}" r="4" fill="#333"/></g>`;
+const calcada=(y=620,h=64)=>`<rect y="${y}" width="${W}" height="${h}" fill="#ded9cc"/>${[...Array(25)].map((_,i)=>`<path d="M${i*66} ${y+h/2} q16 -15 33 0 q16 15 33 0" stroke="#b9b2a2" stroke-width="4" fill="none"/>`).join('')}<rect y="${y+h-6}" width="${W}" height="6" fill="#a8a294"/>`;
+const azulejos=(x,y,w,h,c='#7fb8c4')=>{let s='';for(let i=0;i<w;i+=56)for(let j=0;j<h;j+=56)s+=`<rect x="${x+i}" y="${y+j}" width="52" height="52" fill="${(i+j)%112?c:shade(c,14)}"/><circle cx="${x+i+26}" cy="${y+j+26}" r="10" fill="${shade(c,-18)}" opacity=".5"/>`;return s;};
+const granilite=(y,h)=>{let s=`<rect y="${y}" width="${W}" height="${h}" fill="#cfc8bd"/>`;for(let i=0;i<130;i++)s+=`<circle cx="${(i*137)%1600}" cy="${y+((i*89)%h)}" r="${2+(i%3)}" fill="${['#a89f92','#8d8478','#bdb5a8'][i%3]}"/>`;return s+`<rect y="${y}" width="${W}" height="8" fill="#9a9184"/>`;};
+const bandeirinhas=(y,amp=60)=>`<path d="M0 ${y} Q400 ${y+amp} 800 ${y} T1600 ${y}" stroke="#e8e0d0" stroke-width="4" fill="none"/>${[...Array(16)].map((_,i)=>{const t=i/15,x=t*1600,yy=y+Math.sin(t*Math.PI*2)*amp*(t<.5?t*2*(1-t*2)+.5:.5);return `<path d="M${x} ${yy+2} l16 44 l16 -44 z" fill="${['#ef476f','#ffd23f','#06d6a0','#118ab2','#f78c6b','#9c27b0'][i%6]}"/>`;}).join('')}`;
+const sombra=(x,rx)=>`<ellipse cx="${x}" cy="852" rx="${rx}" ry="16" fill="#000" opacity=".14"/>`;
+/* camadas de profundidade estilo stage de jogo */
+const morro=(y=300,haze='#ffe4c8')=>{ let s=`<path d="M-40 ${y+170} Q240 ${y-60} 620 ${y+80} Q980 ${y-100} 1320 ${y+60} Q1490 ${y-10} 1640 ${y+70} V${y+280} H-40 Z" fill="#bc8f6f"/>`; for(let i=0;i<36;i++){ const x=(i*89)%1540+20, ry=y+34+((i*53)%130); const c=['#e8a49c','#9ec5e8','#f2d49e','#a8d8b9','#e8b4c8','#f4a86a','#c9b0e8'][i%7]; s+=`<rect x="${x}" y="${ry}" width="44" height="36" fill="${c}"/><rect x="${x-2}" y="${ry-9}" width="48" height="11" fill="#a05a42"/><rect x="${x+15}" y="${ry+13}" width="11" height="11" fill="#54463e"/>`; } s+=`<path d="M-40 ${y+170} Q240 ${y-60} 620 ${y+80} Q980 ${y-100} 1320 ${y+60} Q1490 ${y-10} 1640 ${y+70} V${y-160} H-40 Z" fill="${haze}"/>`; s+=`<rect x="-40" y="${y-120}" width="1700" height="420" fill="${haze}" opacity=".42"/>`; return s; };
+const folha=(x,y,r,a,c)=>`<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*0.4}" fill="${c}" transform="rotate(${a} ${x} ${y})"/>`;
+const frameFolhas=(c1='#173620',c2='#215030',c3='#2c6a40')=>[[0,0,1],[1600,0,-1]].map(([cx,cy,dir])=>`<g>${[[20,30,120,20],[130,-10,100,55],[60,140,95,-30],[190,80,80,40],[-20,200,85,-60],[260,10,70,80],[120,240,65,-20],[300,120,55,50]].map(([x,y,r,a],i)=>folha(cx+dir*x,cy+y,r,dir*a,[c1,c2,c1,c3,c2,c1,c2,c3][i])).join('')}<path d="M${cx} ${cy+60} q${dir*130} 60 ${dir*190} 200" stroke="${c1}" stroke-width="14" fill="none"/></g>`).join('');
+const raios=(x,y)=>[-30,-12,8,26].map(a=>`<path d="M${x} ${y} L${x+Math.sin(a*Math.PI/180)*1300-140} ${y+Math.cos(a*Math.PI/180)*1300} L${x+Math.sin(a*Math.PI/180)*1300+140} ${y+Math.cos(a*Math.PI/180)*1300} Z" fill="#fff2c0" opacity=".10"/>`).join('');
+const telhados=(y=430)=>`<path d="M0 ${y+90} h1600 V${y+240} H0 Z" fill="#241a2e"/>${[...Array(11)].map((_,i)=>{const x=i*150-20,h=40+(i*37)%70;return `<rect x="${x}" y="${y+90-h}" width="130" height="${h}" fill="#241a2e"/><rect x="${x-6}" y="${y+84-h}" width="142" height="10" fill="#2e2238"/>${(i%3===0)?`<rect x="${x+40}" y="${y+30-h}" width="44" height="54" rx="6" fill="#241a2e"/><ellipse cx="${x+62}" cy="${y+30-h}" rx="26" ry="9" fill="#2e2238"/>`:''}${(i%4===1)?`<rect x="${x+90}" y="${y+50-h}" width="8" height="40" fill="#241a2e"/><path d="M${x+74} ${y+52-h} h40" stroke="#241a2e" stroke-width="5"/>`:''}<rect x="${x+30}" y="${y+110}" width="16" height="16" fill="#ffd76b" opacity="${(i*7)%3?'.75':'0'}"/><rect x="${x+80}" y="${y+140}" width="16" height="16" fill="#ffd76b" opacity="${(i*5)%2?'.6':'0'}"/>`;}).join('')}`;
+function CENA(defsExtra, body){ __bg++; return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice">${DEFS(defsExtra)}${body}${VIN()}</svg>`; }
+
 const BG = {
-  quartoIsis: ()=>room('#e9d8f0','#b58a6a', window_(1000,110,420,320,'#1f2750')+`<circle cx="1280" cy="200" r="40" fill="#fff4c2"/><rect x="120" y="420" width="600" height="190" fill="#c2587a" rx="16"/><rect x="140" y="380" width="200" height="70" fill="#fff" rx="12"/><rect x="100" y="200" width="160" height="200" fill="#fff" opacity=".8"/><rect x="110" y="210" width="140" height="30" fill="#ff8c42"/><rect x="110" y="250" width="140" height="30" fill="#3aa0a0"/><rect x="110" y="290" width="140" height="30" fill="#6b5b95"/>`),
-  cozinha: ()=>room('#f7efd9','#9aa3ad', window_(160,120,360,260)+table(560,470,620,'#d9a86a')+`<rect x="1280" y="220" width="220" height="400" fill="#ddd"/><rect x="1290" y="230" width="200" height="120" fill="#bbb"/><rect x="600" y="380" width="60" height="90" fill="#eee"/><rect x="700" y="380" width="60" height="90" fill="#eee"/><rect x="1040" y="380" width="60" height="90" fill="#eee"/>`),
-  patio: ()=>outside('#8fd3ff','#eaf6ff','#9bc53d', tree(250,620,1.3)+tree(1350,620,1.1)+`<rect x="500" y="520" width="600" height="30" fill="#c9945a"/><rect x="520" y="550" width="24" height="70" fill="#b07d45"/><rect x="1056" y="550" width="24" height="70" fill="#b07d45"/><rect x="0" y="300" width="${W}" height="320" fill="#f1d2b6" opacity=".35"/>`),
-  corredor: ()=>room('#e8eef7','#cfd6e0', [0,1,2,3,4,5,6,7].map(i=>`<rect x="${80+i*190}" y="260" width="150" height="350" fill="${i%2?'#7aa6c2':'#6b93b0'}" stroke="#4f7791" stroke-width="4"/><rect x="${180+i*190}" y="420" width="20" height="8" fill="#333"/>`).join('')),
-  lanchonete: ()=>room('#fff1e0','#d9534f', `<rect x="100" y="380" width="1400" height="40" fill="#444"/><rect x="100" y="420" width="1400" height="190" fill="#8a3a3a"/>`+[0,1,2,3].map(i=>`<circle cx="${350+i*300}" cy="540" r="40" fill="#d9534f" stroke="#333" stroke-width="6"/>`).join('')+`<rect x="200" y="120" width="500" height="180" fill="#fff" stroke="#d9534f" stroke-width="10"/><text x="450" y="230" font-size="70" text-anchor="middle" font-family="cursive" fill="#d9534f">Lanches</text>`),
-  festa: ()=>`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice"><rect width="${W}" height="${H}" fill="#12081c"/>${[...Array(40)].map(()=>`<circle cx="${rnd(0,W)}" cy="${rnd(0,H)}" r="${rnd(30,120)}" fill="${['#e07a9c','#5c6bc0','#9bc53d','#f2c14e'][rnd(0,3)]}" opacity=".18"/>`).join('')}<rect y="640" width="${W}" height="260" fill="#1f1030"/></svg>`,
-  praca: ()=>outside('#ffb37a','#ffe9cf','#6f9e4a', tree(200,640,1.4)+tree(1450,640,1.2)+`<circle cx="1200" cy="200" r="80" fill="#ffd36b" opacity=".9"/><rect x="560" y="520" width="480" height="28" fill="#6b4a2a"/><rect x="580" y="548" width="22" height="80" fill="#5a3a1a"/><rect x="998" y="548" width="22" height="80" fill="#5a3a1a"/><rect x="0" y="560" width="${W}" height="60" fill="#8fb36b"/>`),
-  predio: ()=>room('#efeae4','#8a8079', door(180,'401')+door(700,'402')+door(1220,'403')+`<rect x="0" y="500" width="${W}" height="6" fill="#b9b0a8"/>`),
-  salaCeline: (ok)=>room('#f3efe7','#c8a27c', window_(1050,120,400,300)+`<rect x="120" y="420" width="640" height="190" fill="#5a7d8a" rx="20"/><rect x="140" y="380" width="600" height="60" fill="#6d94a3" rx="14"/>`+(ok?`<rect x="880" y="520" width="120" height="90" fill="#fff" stroke="#ddd"/><rect x="300" y="150" width="260" height="180" fill="#ddd" stroke="#aaa" stroke-width="8"/>`:`<rect x="880" y="470" width="200" height="140" fill="#d9a86a"/><rect x="920" y="400" width="160" height="90" fill="#c9945a"/><text x="980" y="545" font-size="28" text-anchor="middle" font-family="sans-serif" fill="#5a3a1a">CAIXAS</text>`)),
-  hall: ()=>room('#e6e1da','#bfb6a8', `<rect x="600" y="200" width="400" height="410" fill="#888" stroke="#555" stroke-width="8"/><rect x="610" y="210" width="185" height="390" fill="#aab"/><rect x="805" y="210" width="185" height="390" fill="#aab"/><rect x="760" y="150" width="80" height="30" fill="#333"/><circle cx="800" cy="165" r="8" fill="#e07a9c"/><rect x="150" y="420" width="120" height="190" fill="#8b6b4a"/><circle cx="210" cy="400" r="80" fill="#4f9d4f"/><rect x="1300" y="420" width="120" height="190" fill="#8b6b4a"/><circle cx="1360" cy="400" r="80" fill="#4f9d4f"/>`),
-  escada: ()=>room('#e8eef7','#cfd6e0', [0,1,2,3,4,5].map(i=>`<rect x="${700+i*120}" y="${600-i*70}" width="900" height="70" fill="${i%2?'#b9c2d0':'#aab4c4'}"/>`).join('')+`<rect x="700" y="180" width="20" height="430" fill="#556"/>`),
-  cantina: ()=>room('#fff7e6','#d9c9a8', table(150,470,500)+table(950,470,500)+`<rect x="0" y="180" width="${W}" height="60" fill="#f2c14e"/><text x="800" y="224" font-size="40" text-anchor="middle" font-family="sans-serif" fill="#5a3a1a">CANTINA</text>`),
-  black: ()=>`<svg viewBox="0 0 16 9"><rect width="16" height="9" fill="#000"/></svg>`,
-  final: ()=>outside('#ffd6e7','#fff7fb','#e9e6ef',''),
+  /* corredor do prédio — portas 401/402/403, granilite, samambaia */
+  predio: ()=>CENA(CEU('#f2ece2','#efe7d9','#e8dfd0'),
+    `<rect width="${W}" height="${H}" fill="url(#ceu${__bg})"/>
+    <rect y="0" width="${W}" height="90" fill="#d9d0c0"/>
+    <rect y="586" width="${W}" height="10" fill="#b9ae9c"/>${granilite(596,304)}
+    <rect x="40" y="120" width="300" height="330" rx="6" fill="#cfe4ee" stroke="#fff" stroke-width="12"/><path d="M40 230 h300 M40 340 h300" stroke="#fff" stroke-width="8"/><path d="M60 140 l60 90 M140 140 l60 90" stroke="#fff" stroke-width="3" opacity=".6"/>
+    ${[[430,'401','#8a6f4d'],[870,'402','#7d5a3c'],[1310,'403','#8a6f4d']].map(([x,n,c])=>`<rect x="${x-14}" y="212" width="238" height="398" fill="#b9ae9c"/><rect x="${x}" y="226" width="210" height="384" rx="4" fill="${c}"/><rect x="${x+16}" y="246" width="178" height="150" rx="4" fill="${shade(c,-18)}"/><rect x="${x+16}" y="420" width="178" height="150" rx="4" fill="${shade(c,-18)}"/><circle cx="${x+188}" cy="428" r="9" fill="#d9c66a"/><rect x="${x+78}" y="196" width="54" height="26" rx="4" fill="#efe7d9" stroke="#a89b84" stroke-width="2"/><text x="${x+105}" y="215" font-size="19" text-anchor="middle" font-family="sans-serif" fill="#4a4034">${n}</text>`).join('')}
+    <g transform="translate(240 470)"><path d="M0 0 h56 l-8 40 h-40 z" fill="#b06a4a"/>${[-60,-30,0,30,60,90].map(a=>{const r=a*Math.PI/180;return `<path d="M28 0 q${Math.sin(r)*46} -40 ${Math.sin(r)*78} -66" stroke="#3e8e41" stroke-width="7" fill="none" stroke-linecap="round"/>`;}).join('')}</g>
+    <rect x="150" y="300" width="70" height="96" rx="6" fill="#ddd5c6" stroke="#a89b84" stroke-width="3"/>${[0,1,2].map(i=>`<circle cx="${185}" cy="${322+i*26}" r="7" fill="#8d8478"/>`).join('')}
+    ${sombra(535,120)}${sombra(975,120)}${sombra(1415,120)}`),
+
+  /* quarto da Isis — quarto adolescente BR */
+  quartoIsis: ()=>CENA(CEU('#f3e6f0','#eedde8','#e6d2de'),
+    `<rect width="${W}" height="${H}" fill="url(#ceu${__bg})"/>
+    <rect y="580" width="${W}" height="320" fill="#caa27a"/>${[0,1,2,3,4,5,6,7].map(i=>`<rect y="${590+i*38}" width="${W}" height="3" fill="#00000014"/>`).join('')}<rect y="580" width="${W}" height="10" fill="#9a7351"/>
+    <rect x="1060" y="100" width="440" height="340" rx="6" fill="#20305c" stroke="#fff" stroke-width="14"/><path d="M1280 100 v340 M1060 270 h440" stroke="#fff" stroke-width="9"/><circle cx="1400" cy="180" r="42" fill="#fff6c9"/><circle cx="1385" cy="172" r="42" fill="#20305c"/>${[...Array(16)].map((_,i)=>`<circle cx="${1080+(i*61)%400}" cy="${120+(i*47)%300}" r="2" fill="#fff" opacity=".9"/>`).join('')}
+    <rect x="90" y="120" width="300" height="200" rx="8" fill="#1a1a24"/><text x="240" y="200" font-size="46" text-anchor="middle" font-family="sans-serif" font-weight="bold" fill="#ff7fb0">HANDEBOL</text><text x="240" y="250" font-size="24" text-anchor="middle" font-family="sans-serif" fill="#8fd3ff">CAMPEONATO 2026</text>
+    ${bandeirinhas(60,36)}
+    <rect x="120" y="470" width="640" height="160" rx="18" fill="#c2587a"/><rect x="120" y="440" width="640" height="60" rx="18" fill="#d9819c"/><rect x="150" y="410" width="200" height="64" rx="14" fill="#fff"/><rect x="380" y="418" width="160" height="52" rx="12" fill="#ffe1ec"/>
+    <g transform="translate(880 520) rotate(-12)"><ellipse cx="0" cy="70" rx="52" ry="62" fill="#b06a3a"/><ellipse cx="0" cy="70" rx="20" ry="24" fill="#4a2c14"/><rect x="-8" y="-90" width="16" height="130" fill="#8a5a2c"/><rect x="-14" y="-96" width="28" height="20" rx="4" fill="#5a3a1a"/>${[0,1,2].map(i=>`<line x1="${-5+i*5}" y1="-88" x2="${-5+i*5}" y2="120" stroke="#e8d9a0" stroke-width="1.6"/>`).join('')}</g>
+    
+    <rect x="470" y="200" width="220" height="160" rx="6" fill="#fff" opacity=".92"/><rect x="486" y="216" width="188" height="26" rx="4" fill="#ff8c42"/><rect x="486" y="252" width="188" height="26" rx="4" fill="#3aa0a0"/><rect x="486" y="288" width="188" height="26" rx="4" fill="#6b5b95"/><rect x="486" y="324" width="120" height="22" rx="4" fill="#c2587a"/>
+    ${sombra(440,340)}`),
+
+  /* cozinha — azulejo, filtro de barro, geladeira com ímãs */
+  cozinha: ()=>CENA(CEU('#f8f2e4','#f5ecd8','#efe3c8'),
+    `<rect width="${W}" height="${H}" fill="url(#ceu${__bg})"/>
+    ${azulejos(0,300,1600,120)}<rect y="416" width="${W}" height="8" fill="#5a8a94"/>
+    <rect y="600" width="${W}" height="300" fill="#c46a4a"/>${[...Array(8)].map((_,i)=>[...Array(3)].map((_,j)=>`<rect x="${i*200+(j%2)*100-100}" y="${600+j*100}" width="196" height="96" fill="none" stroke="#00000018" stroke-width="4"/>`).join('')).join('')}
+    <rect x="120" y="130" width="340" height="240" rx="6" fill="#bfe3f2" stroke="#fff" stroke-width="12"/><path d="M290 130 v240" stroke="#fff" stroke-width="8"/><circle cx="200" cy="180" r="34" fill="#fff9d9" opacity=".9"/>${nuvens(.55).replace(/translate\((\d+)/g,(m,x)=>`translate(${+x/6+140}`)}
+    <rect x="1250" y="180" width="250" height="440" rx="10" fill="#e8e4dc"/><rect x="1250" y="180" width="250" height="150" rx="10" fill="#dcd8d0"/><rect x="1258" y="336" width="234" height="6" fill="#b9b5ad"/><rect x="1462" y="230" width="14" height="60" rx="6" fill="#9a968e"/><rect x="1462" y="380" width="14" height="90" rx="6" fill="#9a968e"/>${[['#ef476f',1300,240],['#06d6a0',1352,262],['#ffd23f',1322,296],['#118ab2',1390,240],['#f78c6b',1400,300],['#9c27b0',1360,380],['#ef476f',1310,420],['#06d6a0',1420,430]].map(([c,x,y])=>`<rect x="${x}" y="${y}" width="26" height="26" rx="5" fill="${c}"/>`).join('')}
+    <g transform="translate(180 430)"><path d="M0 90 h150 l-16 -90 h-118 z" fill="#b5651d"/><path d="M8 0 h134 l-12 -70 q-55 -22 -110 0 z" fill="#c9752a"/><ellipse cx="75" cy="-70" rx="55" ry="14" fill="#a0521a"/><rect x="60" y="-96" width="30" height="26" rx="8" fill="#b5651d"/><rect x="118" y="30" width="22" height="16" rx="4" fill="#e8e8e8"/><rect x="125" y="46" width="8" height="20" fill="#c9c9c9"/></g>
+    <rect x="100" y="520" width="360" height="24" fill="#8d6e63"/><rect x="120" y="544" width="26" height="180" fill="#795548"/><rect x="414" y="544" width="26" height="180" fill="#795548"/>
+    <rect x="560" y="470" width="620" height="34" rx="8" fill="#e8ddc8"/>${[0,1,2,3,4,5].map(i=>`<rect x="${580+i*100}" y="470" width="88" height="34" fill="${i%2?'#d94f4f':'#f0ece0'}" opacity=".9"/>`).join('')}<rect x="600" y="504" width="30" height="200" fill="#c9b691"/><rect x="1120" y="504" width="30" height="200" fill="#c9b691"/>
+    <g transform="translate(760 400)"><rect x="0" y="40" width="180" height="30" rx="6" fill="#444"/><ellipse cx="90" cy="40" rx="60" ry="14" fill="#2b2b2b"/><ellipse cx="90" cy="34" rx="46" ry="10" fill="#666"/><rect x="80" y="-6" width="20" height="34" fill="#2b2b2b"/></g>
+    ${sombra(280,180)}${sombra(1375,140)}`),
+
+  /* pátio da escola — muro amarelo, quadra, ipê, bandeira */
+  patio: ()=>CENA(CEU('#6fc2f2','#9ed9f7','#d8f0fb'),
+    `<rect width="${W}" height="${H}" fill="url(#ceu${__bg})"/>
+    <circle cx="1320" cy="130" r="64" fill="#fff6b0"/><circle cx="1320" cy="130" r="94" fill="#fff6b0" opacity=".35"/>
+    ${nuvens()}${pipa(1180,240,'#ef476f',.9)}${pipa(240,180,'#06d6a0',.7)}
+    ${morro(200,'#e4f3fb')}
+    <rect y="430" width="${W}" height="190" fill="#f2c14e"/><rect y="430" width="${W}" height="14" fill="#d9a32e"/>${[...Array(20)].map((_,i)=>`<rect x="${i*84}" y="380" width="10" height="54" fill="#3e7d4f"/>`).join('')}<rect y="374" width="${W}" height="10" fill="#3e7d4f"/>
+    <text x="430" y="540" font-size="52" font-family="sans-serif" font-weight="bold" fill="#b3541e" transform="rotate(-1 430 540)">E.E. PROF. DINÁ SOARES</text>
+    <g transform="translate(1030 300)"><rect x="0" y="0" width="12" height="330" fill="#8d8478"/><path d="M12 8 h96 v60 h-96 z" fill="#009c3b"/><path d="M60 13 l40 25 l-40 25 l-40 -25 z" fill="#ffdf00"/><circle cx="60" cy="38" r="12" fill="#002776"/></g>
+    ${ipe(210,600,'#ffd23f',1.15)}${ipe(1460,606,'#c77dff',.95)}
+    ${calcada(620,50)}
+    <rect y="670" width="${W}" height="230" fill="#4f9d4f"/>${[...Array(30)].map((_,i)=>`<path d="M${(i*107)%1600} ${700+(i*53)%180} q6 -14 12 0" stroke="#3e8e41" stroke-width="3" fill="none"/>`).join('')}
+    <rect x="620" y="560" width="420" height="26" rx="6" fill="#8d6e63"/><rect x="650" y="586" width="22" height="70" fill="#6d4c41"/><rect x="988" y="586" width="22" height="70" fill="#6d4c41"/>
+    <g transform="translate(120 500)"><rect width="60" height="120" rx="8" fill="#d9d4c8"/><rect x="14" y="16" width="32" height="20" rx="4" fill="#7fb8c4"/><path d="M30 46 q0 10 0 14" stroke="#5a8a94" stroke-width="4"/></g>
+    ${frameFolhas('#1d442a','#2a5c38','#357048')}${sombra(830,220)}`),
+
+  /* corredor da escola — piso vermelhão, meia-parede azul, mural */
+  corredor: ()=>CENA(CEU('#f2efe6','#eeeadf','#e8e2d2'),
+    `<rect width="${W}" height="${H}" fill="url(#ceu${__bg})"/>
+    <rect y="330" width="${W}" height="120" fill="#4a7fa5"/><rect y="446" width="${W}" height="10" fill="#3a637f"/>
+    <rect y="600" width="${W}" height="300" fill="#a63d2e"/><rect y="600" width="${W}" height="8" fill="#7f2d20"/>${[...Array(8)].map((_,i)=>`<rect x="${i*210}" y="608" width="3" height="292" fill="#00000022"/>`).join('')}<path d="M0 640 h1600" stroke="#ffffff22" stroke-width="3"/>
+    ${[[120,'2ºA'],[560,'2ºB'],[1000,'2ºC']].map(([x,n])=>`<rect x="${x-10}" y="196" width="220" height="404" fill="#8d8478"/><rect x="${x}" y="208" width="200" height="392" rx="4" fill="#6f8fa8"/><rect x="${x+14}" y="226" width="172" height="200" rx="4" fill="#5b7d95"/><rect x="${x+70}" y="240" width="60" height="80" rx="4" fill="#cfe4ee"/><rect x="${x+150}" y="420" width="26" height="10" rx="4" fill="#333"/><rect x="${x+56}" y="176" width="88" height="30" rx="6" fill="#f2c14e"/><text x="${x+100}" y="198" font-size="20" text-anchor="middle" font-family="sans-serif" font-weight="bold" fill="#5a3a1a">${n}</text>`).join('')}
+    <rect x="1290" y="220" width="240" height="300" rx="8" fill="#7a5230"/><rect x="1302" y="232" width="216" height="276" fill="#e8ddc0"/>${[['#fff',1316,250,80,60,-3],['#ffe1ec',1410,246,90,70,2],['#d9f2e6',1330,330,100,64,1],['#fff9d0',1440,340,66,88,-2],['#e6e6fa',1360,410,110,70,3]].map(([c,x,y,w,h,r])=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}" stroke="#00000018" transform="rotate(${r} ${x} ${y})"/>`).join('')}<circle cx="1352" cy="256" r="5" fill="#d94f4f"/><circle cx="1452" cy="252" r="5" fill="#118ab2"/><circle cx="1382" cy="336" r="5" fill="#06d6a0"/>
+    <text x="1410" y="212" font-size="17" text-anchor="middle" font-family="sans-serif" font-weight="bold" fill="#f0e8d0">MURAL</text>
+    ${sombra(220,130)}${sombra(660,130)}${sombra(1100,130)}`),
+
+  /* lanchonete — estufa de salgados, letreiro, banquetas */
+  lanchonete: ()=>CENA(CEU('#fff3dd','#ffedd0','#ffe4bd'),
+    `<rect width="${W}" height="${H}" fill="url(#ceu${__bg})"/>
+    ${azulejos(0,240,1600,120,'#e8a04a')}
+    <rect x="330" y="60" width="940" height="130" rx="16" fill="#c8382e"/><rect x="342" y="72" width="916" height="106" rx="10" fill="#e04438"/><text x="800" y="148" font-size="64" text-anchor="middle" font-family="sans-serif" font-weight="bold" fill="#fff4d9">LANCHES &amp; SUCOS</text>
+    <rect y="600" width="${W}" height="300" fill="#8d6e63"/>${[...Array(8)].map((_,i)=>`<rect y="${610+i*36}" width="${W}" height="3" fill="#00000018"/>`).join('')}
+    <rect x="80" y="420" width="1440" height="40" rx="8" fill="#d94f4f"/><rect x="80" y="460" width="1440" height="190" fill="#b03a3a"/><rect x="80" y="456" width="1440" height="8" fill="#8f2e2e"/>
+    <g transform="translate(180 300)"><rect width="360" height="120" rx="10" fill="#e8e4dc"/><rect x="10" y="10" width="340" height="100" rx="8" fill="#fdf6e0" stroke="#c9c2b2" stroke-width="3" opacity=".92"/>${[[40,86],[92,86],[144,86],[196,86],[248,86],[300,86]].map(([x,y])=>`<path d="M${x} ${y} q10 -30 24 0 q-12 10 -24 0" fill="#d9a032"/>`).join('')}${[[66,56],[118,56],[170,56],[222,56],[274,56]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="13" fill="#c98a28"/>`).join('')}<text x="180" y="34" font-size="17" text-anchor="middle" font-family="sans-serif" fill="#8a6a2a">COXINHA · PASTEL · KIBE</text></g>
+    <g transform="translate(620 330)"><rect width="120" height="90" rx="8" fill="#f2e8d0"/><rect x="14" y="-40" width="26" height="46" rx="6" fill="#ff9f1c"/><rect x="48" y="-52" width="26" height="58" rx="6" fill="#8ac926"/><rect x="82" y="-44" width="26" height="50" rx="6" fill="#ffca3a"/><text x="60" y="56" font-size="18" text-anchor="middle" font-family="sans-serif" fill="#8a6a2a">SUCOS</text><text x="60" y="76" font-size="12" text-anchor="middle" font-family="sans-serif" fill="#b03a3a">(menos o verde)</text></g>
+    <rect x="1120" y="240" width="200" height="410" rx="10" fill="#3a7ca5"/><rect x="1132" y="252" width="176" height="300" rx="6" fill="#bfe3f2"/>${[0,1,2].map(j=>[0,1,2].map(i=>`<rect x="${1146+i*54}" y="${268+j*90}" width="40" height="70" rx="8" fill="${['#e04438','#ff9f1c','#8ac926','#118ab2','#9c27b0','#ffca3a','#e04438','#06d6a0','#ff9f1c'][j*3+i]}"/>`).join('')).join('')}<text x="1220" y="596" font-size="20" text-anchor="middle" font-family="sans-serif" fill="#fff">GELADOS</text>
+    ${[380,700,1020].map(x=>`<circle cx="${x}" cy="700" r="10" fill="#00000022"/><rect x="${x-6}" y="600" width="12" height="100" fill="#4a4a4a"/><ellipse cx="${x}" cy="596" rx="46" ry="14" fill="#d94f4f"/><ellipse cx="${x}" cy="590" rx="46" ry="12" fill="#e86a5e"/>`).join('')}
+    ${sombra(360,200)}${sombra(1220,120)}`),
+
+  /* festa — quintal à noite, bandeirinhas, luzinhas */
+  festa: ()=>CENA(CEU('#0d0a1e','#1a1030','#2b1440'),
+    `<rect width="${W}" height="${H}" fill="url(#ceu${__bg})"/>
+    <circle cx="1360" cy="140" r="54" fill="#f5efd0"/><circle cx="1342" cy="128" r="12" fill="#e0d8b8"/><circle cx="1378" cy="156" r="8" fill="#e0d8b8"/>
+    ${[...Array(26)].map((_,i)=>`<circle cx="${(i*151)%1600}" cy="${(i*83)%300}" r="2" fill="#fff" opacity=".8"/>`).join('')}
+    ${telhados(300)}
+    <rect y="560" width="${W}" height="90" fill="#5a4a5f"/><rect y="560" width="${W}" height="10" fill="#473a4b"/>${[...Array(14)].map((_,i)=>`<rect x="${i*120}" y="570" width="4" height="80" fill="#00000033"/>`).join('')}
+    <rect y="650" width="${W}" height="250" fill="#3a2e42"/>
+    ${bandeirinhas(180,70)}${bandeirinhas(320,-50)}
+    ${[...Array(12)].map((_,i)=>{const t=i/11,x=60+t*1480,y=320+Math.sin(t*Math.PI*2)*-50;return `<circle cx="${x}" cy="${y+46}" r="7" fill="#ffd76b"/><circle cx="${x}" cy="${y+46}" r="16" fill="#ffd76b" opacity=".25"/>`;}).join('')}
+    <g transform="translate(200 430)"><rect width="240" height="130" rx="10" fill="#6d4c41"/><rect x="16" y="-24" width="208" height="30" rx="6" fill="#4a3228"/><circle cx="60" cy="-10" r="14" fill="#ff6b35"/><circle cx="110" cy="-14" r="10" fill="#ffca3a"/><circle cx="86" cy="-8" r="8" fill="#ff9f1c"/><path d="M60 -40 q6 -18 -2 -30 M92 -44 q8 -16 0 -30" stroke="#bbb" stroke-width="4" fill="none" opacity=".6"/></g>
+    <g transform="translate(1250 420)"><rect width="150" height="180" rx="8" fill="#222"/><circle cx="75" cy="60" r="40" fill="#111" stroke="#444" stroke-width="6"/><circle cx="75" cy="60" r="16" fill="#333"/><circle cx="75" cy="140" r="24" fill="#111" stroke="#444" stroke-width="5"/><path d="M-30 20 q-20 40 0 80 M180 20 q20 40 0 80" stroke="#8ac926" stroke-width="5" fill="none" opacity=".5"/></g>
+    <ellipse cx="800" cy="760" rx="500" ry="60" fill="#ffd76b" opacity=".06"/>
+    ${sombra(320,180)}${sombra(1325,110)}`),
+
+  /* praça — pôr do sol, ipês, calçada portuguesa, fios */
+  praca: ()=>CENA(CEU('#ff9f5a','#ffc98a','#ffe8c2'),
+    `<rect width="${W}" height="${H}" fill="url(#ceu${__bg})"/>
+    <circle cx="1180" cy="240" r="90" fill="#ffd76b"/><circle cx="1180" cy="240" r="140" fill="#ffd76b" opacity=".3"/>
+    ${nuvens(.5)}${pipa(320,170,'#118ab2',.85)}
+    ${morro(280,'#ffd9b0')}${raios(1180,240)}
+    ${[[80,300],[1500,280]].map(([x,y])=>`<path d="M${x-60} ${y} l14 -8 l14 8 l-8 -16 z" fill="#3a2e2e" opacity=".8"/>`).join('')}
+    ${poste(360,210)}${poste(1240,190)}${fios(238)}
+    <rect y="560" width="${W}" height="70" fill="#7da87a"/>${casinha(20,'#e8b4c8',210)}${casinha(300,'#9ec5e8',240)}${casinha(1120,'#f2d49e',225)}${casinha(1380,'#a8d8b9',250)}
+    ${calcada(630,70)}
+    <rect y="700" width="${W}" height="200" fill="#6f9e6b"/>${[...Array(24)].map((_,i)=>`<path d="M${(i*131)%1600} ${730+(i*67)%150} q7 -16 14 0" stroke="#5a8a56" stroke-width="3" fill="none"/>`).join('')}
+    ${ipe(180,700,'#c77dff',1.25)}${ipe(1430,706,'#ffd23f',1.1)}
+    <g transform="translate(660 600)"><rect x="0" y="0" width="300" height="22" rx="8" fill="#6d4c41"/><rect x="10" y="-34" width="280" height="40" rx="10" fill="#8d6e63"/><rect x="22" y="22" width="20" height="60" fill="#5d4037"/><rect x="258" y="22" width="20" height="60" fill="#5d4037"/></g>
+    <circle cx="530" cy="240" r="3" fill="#3a2e2e"/><path d="M510 250 q20 -20 40 0" stroke="#3a2e2e" stroke-width="3" fill="none"/><path d="M580 220 q16 -16 32 0" stroke="#3a2e2e" stroke-width="3" fill="none"/>
+    ${frameFolhas()}${sombra(810,200)}`),
+
+  /* sala da Celine / do jogador */
+  salaCeline: (ok)=>CENA(CEU('#f5efe3','#f2e9d8','#ecdfc8'),
+    `<rect width="${W}" height="${H}" fill="url(#ceu${__bg})"/>
+    <rect y="560" width="${W}" height="340" fill="#b98a5e"/>${[0,1,2,3,4,5,6].map(i=>`<rect y="${572+i*44}" width="${W}" height="3" fill="#00000014"/>`).join('')}<rect y="560" width="${W}" height="10" fill="#8f6a44"/>
+    <rect x="1080" y="110" width="420" height="330" rx="8" fill="#ffdba8" stroke="#fff" stroke-width="13"/><path d="M1290 110 v330 M1080 275 h420" stroke="#fff" stroke-width="8"/><circle cx="1200" cy="190" r="40" fill="#fff2c9" opacity=".9"/>${fios(150).replace(/1600/g,'520').replace(/M0/g,'M1080')}
+    <rect x="110" y="420" width="660" height="200" rx="20" fill="#5a7d8a"/><rect x="130" y="380" width="620" height="70" rx="16" fill="#6d94a3"/><rect x="150" y="440" width="180" height="70" rx="10" fill="#7fa8b8"/><rect x="350" y="440" width="180" height="70" rx="10" fill="#7fa8b8"/><rect x="550" y="440" width="180" height="70" rx="10" fill="#7fa8b8"/><rect x="140" y="616" width="30" height="30" fill="#3e5a64"/><rect x="710" y="616" width="30" height="30" fill="#3e5a64"/>
+    <rect x="240" y="660" width="480" height="120" rx="12" fill="#c9584a"/><path d="M260 680 q40 30 80 0 t80 0 t80 0 t80 0 t80 0" stroke="#e8776a" stroke-width="8" fill="none"/>
+    <g transform="translate(880 400)"><path d="M0 60 h64 l-9 46 h-46 z" fill="#b06a4a"/>${[-70,-35,0,35,70,105,140].map(a=>{const r=a*Math.PI/180;return `<path d="M32 60 q${Math.sin(r)*52} -46 ${Math.sin(r)*88} -76" stroke="#3e8e41" stroke-width="8" fill="none" stroke-linecap="round"/>`;}).join('')}<rect x="18" y="106" width="28" height="60" fill="#8d6e63"/></g>
+    ${ok?`<rect x="180" y="140" width="300" height="200" rx="8" fill="#7a5230"/><rect x="194" y="154" width="272" height="172" fill="#f2e8d0"/><path d="M220 300 q60 -90 120 -30 q50 -70 100 -10" stroke="#5a8a56" stroke-width="10" fill="none"/><circle cx="300" cy="210" r="26" fill="#ffd76b"/><rect x="560" y="180" width="220" height="150" rx="8" fill="#404850"/><rect x="572" y="192" width="196" height="116" fill="#1a2026"/><rect x="640" y="330" width="60" height="14" fill="#333"/>`
+       :`<g transform="translate(1000 470)"><rect width="220" height="150" fill="#c9a468"/><rect x="10" y="-70" width="180" height="80" fill="#d9b478"/><path d="M0 0 h220 M10 -70 h180" stroke="#00000022" stroke-width="5"/><text x="110" y="90" font-size="30" text-anchor="middle" font-family="sans-serif" fill="#6a4a22" font-weight="bold">COISAS</text><text x="110" y="124" font-size="30" text-anchor="middle" font-family="sans-serif" fill="#6a4a22" font-weight="bold">VELHAS</text><text x="100" y="-22" font-size="24" text-anchor="middle" font-family="sans-serif" fill="#6a4a22">FRÁGIL ⬆</text></g><rect x="240" y="150" width="280" height="190" rx="8" fill="#e8e0cc" stroke="#c9bfa8" stroke-width="4" stroke-dasharray="12 8"/><text x="380" y="255" font-size="24" text-anchor="middle" font-family="sans-serif" fill="#b3a88e">(lugar do quadro)</text>`}
+    ${sombra(440,300)}${sombra(912,90)}`),
+
+  /* hall do prédio — elevador, plantas, quadro de avisos */
+  hall: ()=>CENA(CEU('#eee9df','#eae4d6','#e2dac8'),
+    `<rect width="${W}" height="${H}" fill="url(#ceu${__bg})"/>
+    ${granilite(600,300)}
+    <rect x="600" y="160" width="400" height="450" rx="6" fill="#8a8a92"/><rect x="614" y="174" width="180" height="436" fill="#b9bcc4"/><rect x="806" y="174" width="180" height="436" fill="#b9bcc4"/><path d="M614 174 l180 436 M794 174 l-180 436" stroke="#ffffff33" stroke-width="3"/><rect x="770" y="120" width="60" height="26" rx="6" fill="#333"/><circle cx="788" cy="133" r="6" fill="#e07a9c"/><circle cx="812" cy="133" r="6" fill="#555"/>
+    <rect x="1230" y="200" width="280" height="330" rx="10" fill="#7a5230"/><rect x="1244" y="214" width="252" height="302" fill="#dfe8d0"/><text x="1370" y="248" font-size="20" text-anchor="middle" font-family="sans-serif" font-weight="bold" fill="#4a5a3a">AVISOS</text>${[['#fff',1260,264,100,70,-2],['#fff9d0',1374,260,104,80,2],['#ffe1ec',1268,350,120,64,1],['#fff',1400,352,80,90,-3],['#d9f2e6',1290,430,140,66,2]].map(([c,x,y,w,h,r])=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}" stroke="#00000015" transform="rotate(${r} ${x} ${y})"/>`).join('')}<circle cx="1288" cy="270" r="5" fill="#d94f4f"/><circle cx="1420" cy="266" r="5" fill="#118ab2"/>
+    <g transform="translate(180 430)">${palmeira(0,180,.85)}<path d="M-52 180 h104 l-12 56 h-80 z" fill="#c9584a"/></g>
+    <rect x="380" y="330" width="130" height="180" rx="8" fill="#d9d4c8" stroke="#a89b84" stroke-width="3"/>${[0,1,2,3].map(i=>`<rect x="${398}" y="${348+i*38}" width="94" height="26" rx="4" fill="#c4beb0"/><circle cx="${480}" cy="${361+i*38}" r="5" fill="#8d8478"/>`).join('')}
+    ${sombra(800,220)}${sombra(180,110)}`),
+
+  /* escada da escola — meia-parede colorida */
+  escada: ()=>CENA(CEU('#f0ede4','#ece8dc','#e5dfd0'),
+    `<rect width="${W}" height="${H}" fill="url(#ceu${__bg})"/>
+    <rect y="360" width="${W}" height="110" fill="#e8946a"/><rect y="466" width="${W}" height="10" fill="#c9744a"/>
+    ${[0,1,2,3,4,5].map(i=>`<rect x="${660+i*130}" y="${610-i*74}" width="940" height="74" fill="${i%2?'#b9c2d0':'#a8b2c2'}"/><rect x="${660+i*130}" y="${610-i*74}" width="940" height="10" fill="#8d97a8"/>`).join('')}
+    <rect x="640" y="140" width="22" height="480" rx="8" fill="#4a5568"/><path d="M651 150 L1600 ${150-6*74+60}" stroke="#4a5568" stroke-width="14"/>${[1,2,3,4].map(i=>`<rect x="${640+i*190}" y="${150-i*57}" width="12" height="${460+i*57}" fill="#4a5568" opacity=".7"/>`).join('')}
+    <rect y="620" width="${W}" height="280" fill="#a63d2e"/><rect y="620" width="${W}" height="8" fill="#7f2d20"/>
+    <rect x="90" y="180" width="360" height="260" rx="10" fill="#3e7d4f"/><rect x="104" y="194" width="332" height="232" fill="#2e5d3b"/><text x="270" y="290" font-size="34" text-anchor="middle" font-family="cursive" fill="#e8f0d8">Ler é respirar</text><text x="270" y="340" font-size="22" text-anchor="middle" font-family="cursive" fill="#b9d8a8">— projeto leitura 2026</text>
+    <g transform="translate(150 470)"><rect width="180" height="150" rx="8" fill="#7fb8c4"/><path d="M20 150 v-40 q0 -20 20 -20 h100 q20 0 20 20 v40" fill="#5a98a4"/><path d="M50 90 q40 -30 80 0" stroke="#eef8fa" stroke-width="6" fill="none"/><circle cx="90" cy="60" r="4" fill="#eef8fa"/></g>
+    ${sombra(270,150)}`),
+
+  /* cantina — balcão, estufa, cartazes de preço */
+  cantina: ()=>CENA(CEU('#fdf6e3','#faf0d8','#f5e8c8'),
+    `<rect width="${W}" height="${H}" fill="url(#ceu${__bg})"/>
+    <rect y="170" width="${W}" height="80" rx="0" fill="#f2c14e"/><text x="800" y="226" font-size="46" text-anchor="middle" font-family="sans-serif" font-weight="bold" fill="#8a5a1a">CANTINA</text><path d="M0 250 h1600" stroke="#d9a32e" stroke-width="8"/>
+    ${bandeirinhas(280,40)}
+    <rect y="620" width="${W}" height="280" fill="#c9b691"/>${[...Array(10)].map((_,i)=>`<rect x="${i*170}" y="620" width="3" height="280" fill="#00000015"/>`).join('')}
+    <rect x="980" y="330" width="540" height="46" rx="8" fill="#d94f4f"/><rect x="980" y="376" width="540" height="200" fill="#b03a3a"/>
+    <g transform="translate(1020 250)"><rect width="300" height="80" rx="8" fill="#e8e4dc"/><rect x="8" y="8" width="284" height="64" rx="6" fill="#fdf6e0" stroke="#c9c2b2" stroke-width="3" opacity=".92"/>${[[40,54],[92,54],[144,54],[196,54],[248,54]].map(([x,y])=>`<path d="M${x} ${y} q10 -26 22 0 q-11 9 -22 0" fill="#d9a032"/>`).join('')}</g>
+    <g transform="translate(1360 240)"><rect width="140" height="90" rx="10" fill="#fff" stroke="#d94f4f" stroke-width="5"/><text x="70" y="34" font-size="22" text-anchor="middle" font-family="sans-serif" font-weight="bold" fill="#b03a3a">PASTEL</text><text x="70" y="66" font-size="26" text-anchor="middle" font-family="sans-serif" font-weight="bold" fill="#3e7d4f">R$ 5</text></g>
+    ${[[140,470,'#ef8354'],[560,470,'#118ab2']].map(([x,y,c])=>`<rect x="${x}" y="${y}" width="330" height="24" rx="8" fill="${c}"/><rect x="${x+16}" y="${y+24}" width="20" height="120" fill="${shade(c,-30)}"/><rect x="${x+294}" y="${y+24}" width="20" height="120" fill="${shade(c,-30)}"/><rect x="${x+30}" y="${y-52}" width="270" height="46" rx="8" fill="${shade(c,25)}" opacity=".5"/>`).join('')}
+    <g transform="translate(120 250)"><rect width="150" height="100" rx="8" fill="#fff" stroke="#8ac926" stroke-width="5" transform="rotate(-3)"/><text x="72" y="40" font-size="20" text-anchor="middle" font-family="sans-serif" font-weight="bold" fill="#5a8a1a" transform="rotate(-3)">SUCO VERDE</text><text x="72" y="72" font-size="16" text-anchor="middle" font-family="sans-serif" fill="#999" transform="rotate(-3)">(por sua conta)</text></g>
+    ${sombra(300,190)}${sombra(1250,220)}`),
+
+  black: ()=>{ __bg++; return `<svg viewBox="0 0 16 9"><rect width="16" height="9" fill="#000"/></svg>`; },
+
+  /* final — pôr do sol dourado, ipês e pipas */
+  final: ()=>CENA(CEU('#ffb27a','#ffd6a0','#fff0d0'),
+    `<rect width="${W}" height="${H}" fill="url(#ceu${__bg})"/>
+    <circle cx="800" cy="330" r="110" fill="#fff0b0"/><circle cx="800" cy="330" r="180" fill="#fff0b0" opacity=".3"/><circle cx="800" cy="330" r="260" fill="#fff0b0" opacity=".12"/>
+    ${nuvens(.6)}${pipa(430,180,'#ef476f',1)}${pipa(1240,150,'#06d6a0',.8)}${pipa(1050,260,'#118ab2',.6)}
+    ${morro(320,'#ffe8c4')}${raios(800,330)}
+    <rect y="620" width="${W}" height="280" fill="#8fae7e"/>${calcada(600,40)}
+    ${[[60,'#e8b4c8',200],[1330,'#9ec5e8',230]].map(([x,c,a])=>casinha(x,c,a)).join('')}
+    ${ipe(230,650,'#ffd23f',1.2)}${ipe(1400,656,'#c77dff',1.05)}
+    ${poste(560,240)}${fios(268)}
+    <path d="M700 300 q10 -12 20 0 M760 280 q10 -12 20 0 M900 310 q8 -10 16 0" stroke="#5a4a3a" stroke-width="3" fill="none"/>
+    ${frameFolhas()}${sombra(800,340)}`),
 };
 
 /* ---------------- Áudio ---------------- */
