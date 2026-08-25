@@ -128,7 +128,23 @@
   /* telas */
   .screen{position:absolute;inset:0;display:none;z-index:40;overflow:auto;background:var(--paper);color:var(--ink)}
   .screen.on{display:block}
-  #title{background:linear-gradient(160deg,#2a2236 0%,#17131d 60%,#24182a 100%);color:#ebe6f0;overflow:hidden}
+  #title{background:#17131d;color:#ebe6f0;overflow:hidden}
+  #titleBg{position:absolute;inset:0}
+  #titleBg svg{width:100%;height:100%;display:block}
+  #titleBg .tnuvem{animation:tdrift 42s ease-in-out infinite alternate}
+  #titleBg .tnuvem2{animation:tdrift 58s ease-in-out infinite alternate-reverse}
+  #titleBg .tpipa{animation:tbob 5.5s ease-in-out infinite alternate;transform-origin:center}
+  #titleBg .tpipa2{animation:tbob 7s ease-in-out infinite alternate-reverse}
+  @keyframes tdrift{from{transform:translateX(-70px)}to{transform:translateX(90px)}}
+  @keyframes tbob{from{transform:translate(0,0) rotate(-3deg)}to{transform:translate(26px,-30px) rotate(5deg)}}
+  #titleShade{position:absolute;inset:0;background:linear-gradient(100deg,#17131dee 0%,#17131dcc 34%,#17131d55 58%,#17131d22 100%)}
+  #titleInner .eyebrow{animation:tfade 1.2s ease-out both}
+  #titleInner h1{animation:tfade 1.2s .15s ease-out both}
+  #titleInner .sub,#menu{animation:tfade 1.2s .35s ease-out both}
+  @keyframes tfade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  #menu button{position:relative;padding-left:44px}
+  #menu button::before{content:'▸';position:absolute;left:18px;color:#e07a9c;transition:transform .15s}
+  #menu button:hover::before{transform:translateX(5px);color:#17131d}
   #titleInner{position:absolute;left:7%;top:14%;max-width:560px;z-index:2}
   #titleInner .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#e07a9c;font-weight:700}
   #titleInner h1{font-family:var(--disp);font-size:clamp(44px,8vw,92px);line-height:1;margin:10px 0 6px;font-weight:700}
@@ -264,6 +280,8 @@
   </div></div>
 
   <div id="title" class="screen">
+    <div id="titleBg"></div>
+    <div id="titleShade"></div>
     <div id="titleInner">
       <div class="eyebrow">uma visual novel sobre violência invisível</div>
       <h1>Nas<br>Entrelinhas<span>Entrelinhas</span></h1>
@@ -595,20 +613,28 @@ const BG = {
 };
 
 /* ---------------- Áudio ---------------- */
-let AC=null, muted=false, musicTimer=null;
-function audioInit(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended') AC.resume(); }
+let AC=null, muted=false, musicTimer=null, wetBus=null;
+function audioInit(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended') AC.resume();
+  if(AC&&!wetBus){ try{ wetBus=AC.createDelay(1); wetBus.delayTime.value=.29; const fb=AC.createGain(); fb.gain.value=.38; const lp=AC.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=1500; const wg=AC.createGain(); wg.gain.value=.22; wetBus.connect(fb); fb.connect(lp); lp.connect(wetBus); wetBus.connect(wg); wg.connect(AC.destination); }catch(e){} }
+}
+/* voz de cada personagem (bipes de diálogo) */
+const VOICE={isis:540,gael:215,mae:400,olivia:505,arthur:235,lara:470,be:565,rafa:305,celine:430,davi:185,paula:460,marta:370,sofia:585,matheus:265,ju:495,irma:445,P:340,NARR:0};
+function blip(k){ if(!AC||muted) return; const f=VOICE[k]!==undefined?VOICE[k]:420; if(!f) return; const t0=AC.currentTime; const o=AC.createOscillator(),g=AC.createGain(); const masc=CH[k]&&CH[k].m; o.type=masc?'square':'triangle'; o.frequency.value=f+(Math.random()*36-18); g.gain.setValueAtTime(.0001,t0); g.gain.exponentialRampToValueAtTime(masc?.014:.02,t0+.008); g.gain.exponentialRampToValueAtTime(.0001,t0+.055); o.connect(g).connect(AC.destination); o.start(t0); o.stop(t0+.07); }
 function tone(f,dur=.3,type='sine',vol=.06){ if(!AC||muted) return; const o=AC.createOscillator(),g=AC.createGain(); o.type=type;o.frequency.value=f; g.gain.setValueAtTime(vol,AC.currentTime); g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+dur); o.connect(g).connect(AC.destination); o.start(); o.stop(AC.currentTime+dur); }
 function sfx(k){ if(k==='click') tone(660,.05,'triangle',.015); if(k==='ok'){tone(523,.15,'triangle',.04);setTimeout(()=>tone(784,.3,'triangle',.04),120);} if(k==='voz'){tone(880,.5,'sine',.04);} if(k==='right'){tone(659,.12,'triangle',.04);setTimeout(()=>tone(988,.35,'triangle',.04),110);} if(k==='wrong'){tone(220,.35,'triangle',.035);} }
 function bellSound(){ if(!AC||muted) return; const t0=AC.currentTime; [[880,.05,2.6],[1760,.022,1.8],[2637,.012,1.2],[3520,.006,.8]].forEach(([f,v,d])=>{ const o=AC.createOscillator(),g=AC.createGain(); o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(v,t0+.012); g.gain.exponentialRampToValueAtTime(.0001,t0+d); o.connect(g).connect(AC.destination); o.start(t0); o.stop(t0+d+.05); }); }
 function bell(){ bellSound(); const b=$('#bell'); b.classList.remove('ring'); void b.offsetWidth; b.classList.add('ring'); }
 /* trilha adaptativa: menu / leve / tensao / emotivo */
 let musicMode='off';
-function padNote(f,dur,vol,type='sine',cut=900){ if(!AC||muted) return; const t0=AC.currentTime; const o=AC.createOscillator(),g=AC.createGain(),fl=AC.createBiquadFilter(); o.type=type; o.frequency.value=f; fl.type='lowpass'; fl.frequency.value=cut; g.gain.setValueAtTime(0.0001,t0); g.gain.linearRampToValueAtTime(vol,t0+dur*0.3); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur); o.connect(fl).connect(g).connect(AC.destination); o.start(t0); o.stop(t0+dur+.05); }
+function padNote(f,dur,vol,type='sine',cut=900){ if(!AC||muted) return; const t0=AC.currentTime; const o=AC.createOscillator(),g=AC.createGain(),fl=AC.createBiquadFilter(); o.type=type; o.frequency.value=f; fl.type='lowpass'; fl.frequency.value=cut; g.gain.setValueAtTime(0.0001,t0); g.gain.linearRampToValueAtTime(vol,t0+dur*0.3); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur); o.connect(fl).connect(g); g.connect(AC.destination); if(wetBus) g.connect(wetBus); o.start(t0); o.stop(t0+dur+.05); }
 const MOODCFG={
-  menu:   {beat:2100, chords:[[220,261.6,329.6],[196,246.9,293.7],[174.6,220,261.6],[196,233.1,293.7]], vol:.032, type:'sine',   spark:.20, sparkNotes:[523.3,659.3,784], bass:.028},
-  leve:   {beat:1500, chords:[[261.6,329.6,392],[293.7,349.2,440],[246.9,293.7,392],[261.6,349.2,440]], vol:.026, type:'triangle',spark:.45, sparkNotes:[784,880,1046.5], bass:.022},
+  menu:   {beat:2100, chords:[[220,261.6,329.6],[196,246.9,293.7],[174.6,220,261.6],[196,233.1,293.7]], vol:.032, type:'sine',   spark:.15, sparkNotes:[523.3,659.3,784], bass:.028,
+           mel:[440,0,392,329.6, 349.2,0,293.7,0, 329.6,0,261.6,293.7, 246.9,0,0,0]},
+  leve:   {beat:1500, chords:[[261.6,329.6,392],[293.7,349.2,440],[246.9,293.7,392],[261.6,349.2,440]], vol:.026, type:'triangle',spark:.30, sparkNotes:[784,880,1046.5], bass:.022,
+           mel:[523.3,587.3,659.3,0, 784,0,659.3,587.3, 523.3,0,440,523.3, 587.3,0,0,0]},
   tensao: {beat:2600, chords:[[110,130.8,155.6],[103.8,123.5,155.6]],                                   vol:.040, type:'sine',   spark:.10, sparkNotes:[622.3,466.2],    bass:0, dark:true},
-  emotivo:{beat:1800, chords:[[220,261.6,329.6,392],[174.6,220,261.6,349.2],[196,246.9,293.7,349.2],[164.8,207.7,246.9,329.6]], vol:.030, type:'sine', spark:.55, sparkNotes:[523.3,587.3,659.3,784], bass:.026},
+  emotivo:{beat:1800, chords:[[220,261.6,329.6,392],[174.6,220,261.6,349.2],[196,246.9,293.7,349.2],[164.8,207.7,246.9,329.6]], vol:.030, type:'sine', spark:.35, sparkNotes:[523.3,587.3,659.3,784], bass:.026,
+           mel:[659.3,0,587.3,523.3, 493.9,0,523.3,0, 440,0,493.9,523.3, 587.3,0,523.3,0]},
 };
 function music(mode){
   if(mode===true) mode='menu'; if(mode===false||!mode) mode='off';
@@ -620,16 +646,17 @@ function music(mode){
     if(c.bass) padNote(ch[0]/2, c.beat/1000*2.1, c.bass, 'triangle', 400);
     if(c.dark){ padNote(55, .16, .05, 'sine', 200); setTimeout(()=>padNote(55,.12,.035,'sine',200), 420); if(Math.random()<.18) setTimeout(()=>padNote(c.sparkNotes[bar%c.sparkNotes.length], 2.4, .012, 'sine', 1400), c.beat*.55); }
     else if(Math.random()<c.spark) setTimeout(()=>padNote(c.sparkNotes[Math.floor(Math.random()*c.sparkNotes.length)], 1.4, .022, 'triangle', 1600), c.beat*(.3+Math.random()*.4));
+    if(c.mel){ const half=c.beat/2; [c.mel[(bar*2)%c.mel.length], c.mel[(bar*2+1)%c.mel.length]].forEach((n,i)=>{ if(n) setTimeout(()=>{ if(musicMode===mode&&!muted) padNote(n, half/1000*1.7, .026, 'triangle', 2000); }, i*half+120); }); }
     bar++;
   };
   play(); musicTimer=setInterval(play, c.beat);
 }
 /* clima padrão por cena */
 const MOODS={ pro_1:'leve', pro_2:'leve', pro_3:'tensao',
-  c1_1:'leve', c1_1b:'leve', c1_2:'leve', c1_2a:'tensao', c1_2b:'tensao', c1_2c:'tensao', c1_3:'leve', c1_3a:'tensao', c1_3b:'tensao', c1_3c:'tensao', c1_3d:'tensao', c1_3e:'tensao', c1_4:'emotivo', c1_4a:'emotivo', c1_4b:'emotivo', c1_4c:'emotivo', c1_4x:'emotivo', c1_5:'tensao', c1_6:'emotivo',
-  c2_1:'leve', c2_2:'leve', c2_2a:'leve', c2_2b:'leve', c2_3:'leve', c2_3a:'leve', c2_3b:'leve', c2_4:'tensao', c2_4a:'tensao', c2_4b:'tensao', c2_4c:'tensao', c2_5:'tensao', c2_6:'emotivo', c2_6a:'emotivo', c2_6b:'emotivo', c2_6c:'emotivo', c2_6x:'emotivo', c2_7:'emotivo',
-  c3_1:'leve', c3_2:'leve', c3_2a:'tensao', c3_2b:'tensao', c3_3:'tensao', c3_4:'tensao', c3_5:'emotivo', c3_5a:'emotivo', c3_5b:'emotivo', c3_6:'emotivo',
-  c4_1:'leve', c4_2:'tensao', c4_2a:'tensao', c4_2b:'tensao', c4_3:'tensao', c4_3a:'tensao', c4_3b:'tensao', c4_3c:'tensao', c4_4:'leve', c4_5:'tensao', c4_5a:'tensao', c4_5b:'tensao', c4_5c:'tensao', c4_6:'tensao',
+  c1_1:'leve', c1_1b:'leve', c1_2x:'leve', c1_2:'leve', c1_2a:'tensao', c1_2b:'tensao', c1_2c:'tensao', c1_3:'leve', c1_3a:'tensao', c1_3b:'tensao', c1_3c:'tensao', c1_3d:'tensao', c1_3e:'tensao', c1_4:'emotivo', c1_4a:'emotivo', c1_4b:'emotivo', c1_4c:'emotivo', c1_4x:'emotivo', c1_5:'tensao', c1_6:'emotivo',
+  c2_0:'leve', c2_1:'leve', c2_2:'leve', c2_2a:'leve', c2_2b:'leve', c2_3:'leve', c2_3a:'leve', c2_3b:'leve', c2_4:'tensao', c2_4a:'tensao', c2_4b:'tensao', c2_4c:'tensao', c2_5:'tensao', c2_6:'emotivo', c2_6a:'emotivo', c2_6b:'emotivo', c2_6c:'emotivo', c2_6x:'emotivo', c2_7:'emotivo',
+  c3_0:'leve', c3_1:'leve', c3_2:'leve', c3_2a:'tensao', c3_2b:'tensao', c3_3:'tensao', c3_4:'tensao', c3_5:'emotivo', c3_5a:'emotivo', c3_5b:'emotivo', c3_6:'emotivo',
+  c4_0:'leve', c4_1:'leve', c4_2:'tensao', c4_2a:'tensao', c4_2b:'tensao', c4_3:'tensao', c4_3a:'tensao', c4_3b:'tensao', c4_3c:'tensao', c4_4:'leve', c4_5:'tensao', c4_5a:'tensao', c4_5b:'tensao', c4_5c:'tensao', c4_6:'tensao',
   final:'emotivo' };
 $('#btnMute').onclick=()=>{ muted=!muted; $('#btnMute').textContent=muted?'🔇':'🔊'; };
 
@@ -656,7 +683,7 @@ async function say(k,text,opts={}){
   tx.innerHTML=''; typing=true; skipType=false;
   const spans=segs.map(sg=>{ const sp=document.createElement('span'); if(sg.ap) sp.className='ap'; tx.appendChild(sp); return sp; });
   const speed=opts.slow?60:22;
-  outer: for(let i=0;i<segs.length;i++){ const sg=segs[i]; for(let j=0;j<sg.s.length;j++){ if(skipType){ spans.forEach((sp,q)=>sp.textContent=segs[q].s); break outer; } spans[i].textContent+=sg.s[j]; if(j%3===0&&sg.s[j]!==' ') tone(k==='P'?420:(k&&k!=='NARR'?(CH[k].m?300:480):400),.03,'square',.004); await sleep(sg.s[j]==='.'?speed*5:speed); } }
+  outer: for(let i=0;i<segs.length;i++){ const sg=segs[i]; for(let j=0;j<sg.s.length;j++){ if(skipType){ spans.forEach((sp,q)=>sp.textContent=segs[q].s); break outer; } spans[i].textContent+=sg.s[j]; if(j%2===0&&!' .,…!?—'.includes(sg.s[j])) blip(k||'NARR'); await sleep(sg.s[j]==='.'?speed*5:speed); } }
   typing=false; nx.classList.add('on');
   if(opts.bell) setTimeout(bell,350);
   await new Promise(r=>waitClick=r); waitClick=null;
@@ -699,7 +726,7 @@ const CHAPTERS = {
       {id:'c1s3',p:'arma',who:'Gael, recontado pela Isis',q:'"Se você não me obedecer, os nossos pais vão saber de tudo. Você que vai me obrigar."'},
       {id:'c1s4',p:'menos',who:'Gael, para VOCÊ, no corredor',q:'"Se ela te falar alguma coisa estranha, você me conta, né? A gente cuida dela juntos."'}],
     fim:{nome:'Violência psicológica entre irmãos: invasão de privacidade, controle e chantagem emocional.', porque:'Não precisa de tapa. Usar um segredo confiado para obrigar alguém a obedecer é coerção. "Estou cuidando" não anula o medo que a pessoa sente.', ajuda:'Estar por perto, como você esteve. Não fazer cara de pena. Lembrar a pessoa de que o segredo continua sendo dela — e apoiar a conversa com um adulto de confiança.', onde:'Disque 100 (Direitos Humanos) · Conselho Tutelar · orientação educacional da escola · CVV 188.'} },
-  c2:{ title:'Olívia e Arthur', sub:'no namoro', prot:'olivia', start:'c2_1', next:'c3',
+  c2:{ title:'Olívia e Arthur', sub:'no namoro', prot:'olivia', start:'c2_0', next:'c3',
     sinais:[
       {id:'c2s1',p:'elogio',who:'Arthur, namorado da Olívia',q:'"Você fica ainda mais bonita natural, sem tanta coisa no rosto."'},
       {id:'c2s2',p:'culpa',who:'Arthur, por mensagem',q:'"se vc gostasse de mim de verdade preferia ficar comigo. mas tudo bem"'},
@@ -708,13 +735,13 @@ const CHAPTERS = {
       {id:'c2s5',p:'exagero',who:'Arthur, recontado pela Olívia',q:'"Você tá exagerando. Eu faço tudo isso porque te amo."'},
       {id:'c2s6',p:'recado',who:'Arthur, por mensagem, para VOCÊ',q:'"vc é gente boa. mas não enche a cabeça da Olívia com ideia, falou? confio em vc 👊"'}],
     fim:{nome:'Relacionamento abusivo: controle, manipulação por culpa e isolamento. A lei reconhece isso como violência psicológica (Lei Maria da Penha, art. 7º, II).', porque:'Não houve um grito. Houve uma pessoa que foi diminuindo até caber no que o outro queria. Ciúme não é prova de amor; controle não é cuidado.', ajuda:'Ficar por perto mesmo quando a pessoa se afasta; não julgar; devolver a ela as próprias perguntas ("quando foi a última vez que você escolheu sem medo?").', onde:'Ligue 180 (Central de Atendimento à Mulher) · Disque 100 · CVV 188 · orientação da escola.'} },
-  c3:{ title:'Sofia e Matheus', sub:'na amizade', prot:'sofia', start:'c3_1', next:'c4',
+  c3:{ title:'Sofia e Matheus', sub:'na amizade', prot:'sofia', start:'c3_0', next:'c4',
     sinais:[
       {id:'c3s1',p:'arma',who:'Matheus, melhor amigo da Sofia',q:'"Se eu quisesse, podia contar pra todo mundo o que você me falou, sabia? Brincadeira."'},
       {id:'c3s2',p:'padrao',who:'Matheus, várias vezes',q:'"Se eu quisesse…" / "Lembra que eu sei de…?" / (só olha pra ela)'},
       {id:'c3s3',p:'plateia',who:'Matheus, na cantina',q:'"Conta pra eles por que você sumiu, Sofia. Ah, não… é segredo, né?"'}],
     fim:{nome:'Chantagem emocional e quebra de confiança dentro de uma amizade.', porque:'Confiança não é dívida. Quem usa um segredo para conseguir o que quer — mesmo sem nunca contar — está controlando a outra pessoa pelo medo.', ajuda:'Validar o que a pessoa sente ("isso não é brincadeira"); lembrar que o segredo continua sendo dela; apoiar, se for seguro, que ela tire o poder da ameaça falando primeiro.', onde:'Orientação educacional da escola · Disque 100 · CVV 188 · Conselho Tutelar.'} },
-  c4:{ title:'Celine e Davi', sub:'entre vizinhos', prot:'celine', start:'c4_1', next:'final',
+  c4:{ title:'Celine e Davi', sub:'entre vizinhos', prot:'celine', start:'c4_0', next:'final',
     sinais:[
       {id:'c4s1',p:'medida',who:'Davi, do 401',q:'TOC. TOC. TOC. na parede — sábado, 21h, música baixa'},
       {id:'c4s2',p:'assunto',who:'Davi, no elevador',q:'"Chegando tarde de novo, hein, Celine? Moça solteira é assim mesmo."'},
@@ -886,6 +913,22 @@ c1_2c: [
   N('Vocês terminam o trabalho. A playlist continua tocando, mas a Isis não canta mais junto.'),
   N('No caminho de volta, você se pega pensando: talvez seja coisa de irmão. Talvez.'),
   N('É assim que funciona. A dúvida vem de brinde.'),
+  {jump:'c1_2x'}
+],
+c1_2x: [
+  {day:'Quarta — antes do jantar'},
+  {bg:'praca'},
+  N('Vocês combinaram de chegar cedo pro jantar. O Gael apareceu com uma bola debaixo do braço.'),
+  {show:'gael',ex:'h',pos:'right'},{show:'isis',ex:'h',pos:'left'},
+  D('gael','Três toques, quem deixar cair paga o pastel de amanhã. Visita começa.','h'),
+  N('Vocês jogam até o sol baixar. O Gael é bom — e não esfrega na cara. A Isis é péssima — e esfrega na cara mesmo assim.'),
+  D('isis','VIU? VIU esse toque? De costas!','h'),
+  D('gael','Foi na canela, Isis.','h'),
+  D('isis','Toque de canela também é toque, ignorante.','h'),
+  N('Você ri de verdade. Pela primeira vez desde a mudança, sem pensar em mais nada.'),
+  D('gael','Cê é gente boa, {nome}. Ainda bem que a Isis achou você — ela precisava de amigo de verdade.','h'),
+  N('Ele fala isso e parece sincero. É sincero. Essa é a parte que ninguém te conta:'),
+  N('a pessoa que controla também sabe ser boa. É por isso que quem está dentro demora tanto pra ver.'),
   {jump:'c1_3'}
 ],
 c1_3: [
@@ -979,6 +1022,16 @@ c1_6: [
 ],
 
 /* ---------- CAPÍTULO 2 · OLÍVIA ---------- */
+c2_0: [
+  {save:'c2_0'},
+  {day:'Domingo — o grupo'},
+  {bg:'salaCeline'},
+  N('Domingo à noite. Seu celular não para de vibrar. A Isis criou um grupo.'),
+  {phone:['OS DA ESCADA 🪜 · 5 pessoas',[['sys','Isis criou o grupo "OS DA ESCADA 🪜"'],['sys','Isis adicionou você, Sofia, Matheus, Juliana'],['you','<b>Isis</b>oficializando: quem senta na escada tá no grupo'],['you','<b>Matheus</b>eu almoço na MESA, sou contra essa gestão'],['you','<b>Isis</b>golpista bloqueado'],['you','<b>Sofia</b>gente o {nome} entrou há duas semanas e já tem grupo, eu levei TRÊS ANOS'],['you','<b>Ju</b>kkkkkk verdade'],['me','é o poder do pastel'],['you','<b>Isis</b>REGRA UM FUNCIONA'],['you','<b>Matheus</b>amanhã tem prova de história, alguém estudou?'],['you','<b>Sofia</b>resumo no privado de todo mundo em 10 min'],['you','<b>Ju</b>sofia eu te amo'],['me','sofia presidenta']]]},
+  N('Você dorme sorrindo pra tela, que nem bobo. Cidade nova, e você já tem um grupo com nome ruim e gente boa.'),
+  N('Guarda essa sensação. As histórias que vêm agora acontecem com essas pessoas.'),
+  {jump:'c2_1'}
+],
 c2_1: [
   {save:'c2_1'},{chap:'c2'},
   {day:'Segunda semana — segunda-feira'},
@@ -1121,6 +1174,22 @@ c2_7: [
 ],
 
 /* ---------- CAPÍTULO 3 · SOFIA ---------- */
+c3_0: [
+  {save:'c3_0'},
+  {day:'Sábado — o rolê do Matheus'},
+  {bg:'praca'},
+  N('O Matheus organizou "o rolê de integração oficial d{g} novat{g}": praça, pastel da feira e um campeonato de embaixadinha valendo um sorvete.'),
+  {show:'matheus',ex:'h',pos:'right'},{show:'sofia',ex:'h',pos:'left'},{show:'ju',ex:'h',pos:'center'},
+  D('matheus','Regras do campeonato: valendo sorvete, sem usar a mão, e a Sofia é a juíza porque ela é a única honesta aqui.','h'),
+  D('sofia','Finalmente reconhecem meu talento.','h'),
+  D('ju','Ele só te fez juíza pra você não ver que ele usa a mão, Sofia.','h'),
+  D('matheus','PROVAS? Cadê as PROVAS?','k'),
+  N('Vocês passam a tarde inteira nisso. O Matheus perde de propósito pra Sofia no final — você percebe, ele percebe que você percebeu, e pisca.'),
+  D('matheus','Ela tá numa semana difícil. Sorvete resolve 60% dos problemas. O resto a gente escuta.','n'),
+  N('É o tipo de coisa que ele fala. É o tipo de amigo que ele é.'),
+  N('Você vai lembrar dessa tarde muitas vezes. Por bons e maus motivos.'),
+  {jump:'c3_1'}
+],
 c3_1: [
   {save:'c3_1'},{chap:'c3'},
   {day:'Terceira semana — segunda-feira'},
@@ -1245,6 +1314,22 @@ c3_6: [
 ],
 
 /* ---------- CAPÍTULO 4 · CELINE ---------- */
+c4_0: [
+  {save:'c4_0'},
+  {day:'Domingo de manhã — a feira'},
+  {bg:'praca'},
+  N('A Celine bateu na sua porta às oito da manhã de um domingo. "Feira. Agora. É lei."'),
+  {show:'celine',ex:'h',pos:'center'},
+  D('celine','Regras da feira: pastel primeiro, caldo de cana junto, e a barraca do fim é sempre mais barata. Anota.','h'),
+  P('Você tem regra pra tudo, né?'),
+  D('celine','Morar sozinha ensina. A gente vira o próprio manual de instruções.','h'),
+  N('Ela conhece todo mundo: o pasteleiro que guarda o último de queijo pra ela, a moça dos legumes que manda receita, o seu Nelson do caldo de cana.'),
+  D('celine','Sabe o que eu mais gosto aqui? Ninguém acha estranho eu vir sozinha. Ninguém pergunta. Eu sou só… a Celine da feira.','n'),
+  N('Ela fala isso leve. Você guarda pesado — porque lembra de alguém que acha a vida dela "assunto".'),
+  D('celine','Enfim! Leva essa samambaia pequena. Filhote da minha. Todo apartamento precisa de uma coisa viva além da gente.','h'),
+  N('Você volta pra casa com uma samambaia debaixo do braço e a sensação boa de ter virado gente do bairro.'),
+  {jump:'c4_1'}
+],
 c4_1: [
   {save:'c4_1'},{chap:'c4'},
   {day:'Um mês depois da mudança — sábado'},
@@ -1406,6 +1491,15 @@ final: [
   N('A violência invisível conta com duas coisas: o silêncio de quem sofre — e a distração de quem está do lado.'),
   N('Dessa vez, você não se distraiu.'),
   N('Não deixa marca. Deixa silêncio. E é invisível só enquanto ninguém dá nome.',{slow:true}),
+  {day:'Um mês depois'},
+  {bg:'praca'},
+  N('Um mês depois, as coisas continuam. Que é o melhor final que existe.'),
+  {phone:['OS DA ESCADA 🪜 · 7 pessoas',[['sys','Isis adicionou Olívia'],['sys','Sofia adicionou Celine'],['you','<b>Isis</b>oficializando: o grupo agora aceita gente que nunca sentou na escada'],['you','<b>Olívia</b>honrada. trouxe brincos e opinião'],['you','<b>Celine</b>eu sou a adulta responsável? que medo'],['you','<b>Ju</b>celine vc é a dona do café, é cargo vitalício'],['you','<b>Sofia</b>domingo tem café no 402 então?'],['you','<b>Celine</b>tem. e dessa vez PODE fazer barulho'],['me','levo o bolo 🍰'],['you','<b>Isis</b>REGRA UM: o {nome} sempre leva o bolo']]]},
+  N('O Téo passou no campeonato pra semifinal — a Isis gritou tanto que a mãe subiu na arquibancada.'),
+  N('A Olívia entrou pro grêmio. Primeira proposta: mural com a frase da avó dela. "Entra fazendo barulho."'),
+  N('A Sofia apresentou o trabalho de história sozinha, de escolha própria. Tirou a maior nota da sala.'),
+  N('E a Celine trocou a samambaia de lugar: agora ela fica na janela, aparecendo pra rua inteira.'),
+  N('Nada disso vira notícia. Violência invisível a gente combate assim também: com vida comum, barulhenta e cheia de gente.',{slow:true}),
   {credits:true}
 ]
 };
@@ -1494,10 +1588,12 @@ async function doCredits(){
 }
 
 /* ---------------- Telas ---------------- */
+function titleBG(){ __bg++; return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice">${DEFS(CEU('#ff9f5a','#ffc98a','#ffe8c2'))}<rect width="${W}" height="${H}" fill="url(#ceu${__bg})"/><circle cx="1180" cy="250" r="95" fill="#ffd76b"/><circle cx="1180" cy="250" r="150" fill="#ffd76b" opacity=".3"/><g class="tnuvem">${nuvens(.55)}</g><g class="tnuvem2" opacity=".5">${nuvens(.4)}</g><g class="tpipa">${pipa(1080,300,'#ef476f',1.1)}</g><g class="tpipa2">${pipa(380,220,'#118ab2',.8)}</g>${morro(330,'#ffe0bc')}${poste(520,260)}${fios(288)}<rect y="620" width="${W}" height="280" fill="#8fae7e"/>${calcada(602,38)}${casinha(1080,'#e8b4c8',215)}${casinha(1350,'#9ec5e8',245)}${ipe(1480,668,'#ffd23f',1.15)}${ipe(940,650,'#c77dff',.9)}<path d="M700 320 q10 -12 20 0 M770 296 q9 -11 18 0" stroke="#5a4a3a" stroke-width="3" fill="none"/>${VIN()}</svg>`; }
 function showTitle(){
   $('#textbox').classList.remove('on'); hide('all');
   $('#endChap').classList.remove('on');
   $('#title').classList.add('on');
+  if(!$('#titleBg').firstChild) $('#titleBg').innerHTML=titleBG();
   $('#titleGirls').innerHTML=['celine','sofia','olivia','isis'].map(k=>`<div class="tg">${spriteSVG(k, S.finalSeen?'h':'n')}</div>`).join('');
   $('#mCont').disabled=!(S.name && S.cur);
   $('#mNew').textContent = (S.name && (S.cur||Object.keys(S.done).length)) ? 'Começar de novo' : 'Começar';
