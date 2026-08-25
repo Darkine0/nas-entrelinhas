@@ -55,9 +55,11 @@
   @keyframes ring{0%{opacity:0;transform:rotate(0)}10%{opacity:.9;transform:rotate(-14deg)}20%{transform:rotate(12deg)}30%{transform:rotate(-8deg)}40%{transform:rotate(5deg)}50%{transform:rotate(0);opacity:.9}100%{opacity:0}}
 
   /* cartão de dia */
-  #daycard{position:absolute;inset:0;z-index:38;display:flex;align-items:center;justify-content:center;background:#17131d;opacity:0;pointer-events:none;transition:opacity .6s}
+  #daycard{position:absolute;inset:0;z-index:38;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:22px;background:#17131d;opacity:0;pointer-events:none;transition:opacity .6s}
   #daycard.on{opacity:1}
   #daycard span{font-family:var(--disp);font-size:clamp(22px,4.5vw,40px);color:#ebe6f0;text-align:center;padding:0 20px}
+  #dayDate{font-family:var(--disp);font-size:clamp(15px,2.4vw,22px);color:#e07a9c;text-transform:uppercase;letter-spacing:.2em;text-align:center;opacity:0;filter:blur(7px);transition:opacity 2s ease,filter 2s ease}
+  #dayDate.on{opacity:1;filter:blur(0)}
 
   /* overlays */
   .overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:20;background:rgba(23,19,29,.45);padding:20px;overflow:auto}
@@ -238,7 +240,7 @@
     <div id="sprites"></div>
     <div id="textbox"><div id="nametag"></div><div id="text"></div><div id="next">▼</div></div>
   </div>
-  <div id="daycard"><span id="dayTxt"></span></div>
+  <div id="daycard"><span id="dayTxt"></span><div id="dayDate"></div></div>
   <div id="bell" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 2a1 1 0 0 1 1 1v1.07A6 6 0 0 1 18 10v4l1.7 2.55A1 1 0 0 1 18.87 18H5.13a1 1 0 0 1-.83-1.45L6 14v-4a6 6 0 0 1 5-5.93V3a1 1 0 0 1 1-1zm-2 17h4a2 2 0 1 1-4 0z" fill="currentColor"/></svg></div>
   <div id="hud">
     <button id="btnMute" title="Som">🔊</button>
@@ -652,11 +654,11 @@ function music(mode){
   play(); musicTimer=setInterval(play, c.beat);
 }
 /* clima padrão por cena */
-const MOODS={ pro_1:'leve', pro_2:'leve', pro_3:'tensao',
-  c1_1:'leve', c1_1b:'leve', c1_2x:'leve', c1_2:'leve', c1_2a:'tensao', c1_2b:'tensao', c1_2c:'tensao', c1_3:'leve', c1_3a:'tensao', c1_3b:'tensao', c1_3c:'tensao', c1_3d:'tensao', c1_3e:'tensao', c1_4:'emotivo', c1_4a:'emotivo', c1_4b:'emotivo', c1_4c:'emotivo', c1_4x:'emotivo', c1_5:'tensao', c1_6:'emotivo',
-  c2_0:'leve', c2_1:'leve', c2_2:'leve', c2_2a:'leve', c2_2b:'leve', c2_3:'leve', c2_3a:'leve', c2_3b:'leve', c2_4:'tensao', c2_4a:'tensao', c2_4b:'tensao', c2_4c:'tensao', c2_5:'tensao', c2_6:'emotivo', c2_6a:'emotivo', c2_6b:'emotivo', c2_6c:'emotivo', c2_6x:'emotivo', c2_7:'emotivo',
-  c3_0:'leve', c3_1:'leve', c3_2:'leve', c3_2a:'tensao', c3_2b:'tensao', c3_3:'tensao', c3_4:'tensao', c3_5:'emotivo', c3_5a:'emotivo', c3_5b:'emotivo', c3_6:'emotivo',
-  c4_0:'leve', c4_1:'leve', c4_2:'tensao', c4_2a:'tensao', c4_2b:'tensao', c4_3:'tensao', c4_3a:'tensao', c4_3b:'tensao', c4_3c:'tensao', c4_4:'leve', c4_5:'tensao', c4_5a:'tensao', c4_5b:'tensao', c4_5c:'tensao', c4_6:'tensao',
+const MOODS={ pro_1:'leve', pro_2:'leve', pro_3:'tensao', pro_4:'leve',
+  c1_1:'leve', c1_1b:'leve', c1_1c:'leve', c1_2x:'leve', c1_35:'leve', c1_2:'leve', c1_2a:'tensao', c1_2b:'tensao', c1_2c:'tensao', c1_3:'leve', c1_3a:'tensao', c1_3b:'tensao', c1_3c:'tensao', c1_3d:'tensao', c1_3e:'tensao', c1_4:'emotivo', c1_4a:'emotivo', c1_4b:'emotivo', c1_4c:'emotivo', c1_4x:'emotivo', c1_5:'tensao', c1_6:'emotivo',
+  c2_0:'leve', c2_05:'leve', c2_1:'leve', c2_2:'leve', c2_2a:'leve', c2_2b:'leve', c2_3:'leve', c2_3a:'leve', c2_3b:'leve', c2_4:'tensao', c2_4a:'tensao', c2_4b:'tensao', c2_4c:'tensao', c2_45:'tensao', c2_45a:'tensao', c2_45b:'tensao', c2_45c:'leve', c2_5:'tensao', c2_6:'emotivo', c2_6a:'emotivo', c2_6b:'emotivo', c2_6c:'emotivo', c2_6x:'emotivo', c2_7:'emotivo',
+  c3_0:'leve', c3_05:'leve', c3_1:'leve', c3_2:'leve', c3_2a:'tensao', c3_2b:'tensao', c3_3:'tensao', c3_35:'tensao', c3_4:'tensao', c3_5:'emotivo', c3_5a:'emotivo', c3_5b:'emotivo', c3_6:'emotivo',
+  c4_0:'leve', c4_05:'leve', c4_1:'leve', c4_2:'tensao', c4_2a:'tensao', c4_2b:'tensao', c4_3:'tensao', c4_3a:'tensao', c4_3b:'tensao', c4_3c:'tensao', c4_4:'leve', c4_5:'tensao', c4_5a:'tensao', c4_5b:'tensao', c4_5c:'tensao', c4_55:'tensao', c4_6:'tensao',
   final:'emotivo' };
 $('#btnMute').onclick=()=>{ muted=!muted; $('#btnMute').textContent=muted?'🔇':'🔊'; };
 
@@ -697,7 +699,24 @@ let lastWheel=0; document.addEventListener('wheel',e=>{ if(e.deltaY<=0) return; 
 
 function choice(opts){ return new Promise(res=>{ const ov=$('#choices'); ov.innerHTML=''; ov.classList.add('on'); $('#next').classList.remove('on'); const h=document.createElement('div'); h.className='chead'; h.textContent=`E agora, ${S.name} — o que você faz?`; ov.appendChild(h); opts.forEach((o,i)=>{ const b=document.createElement('button'); b.className='choice'; b.textContent=fmt(o); b.onclick=()=>{ sfx('click'); ov.classList.remove('on'); res(i); }; ov.appendChild(b); }); }); }
 async function fx(kind){ if(kind==='flash'){ $('#flash').style.opacity=1; await sleep(150); $('#flash').style.opacity=0; await sleep(400);} if(kind==='fadeout'){ $('#fadeblack').style.opacity=1; await sleep(900);} if(kind==='fadein'){ $('#fadeblack').style.opacity=0; await sleep(900);} }
-async function showDay(t){ const d=$('#daycard'); $('#dayTxt').textContent=t; $('#textbox').classList.remove('on'); d.classList.add('on'); await sleep(1900); d.classList.remove('on'); await sleep(500); }
+/* calendário da história (título do dia → data) */
+const DAYDATES={
+ 'Sábado — o dia da mudança':'7 de março','Domingo — o mercado':'8 de março','Domingo à noite — a véspera':'8 de março',
+ 'Segunda — primeiro dia de aula':'9 de março','Segunda à noite':'9 de março','Terça — trabalho em dupla':'10 de março',
+ 'Quarta — antes do jantar':'11 de março','Quarta — o jantar':'11 de março','Quinta de manhã — a aula':'12 de março',
+ 'Quinta — o intervalo':'12 de março','Quinta — de noite':'12 de março','Sexta — o portão':'13 de março',
+ 'Domingo — o grupo':'15 de março','Segunda — a grande votação':'16 de março','Segunda — o sorteio':'16 de março',
+ 'Terça — a lanchonete':'17 de março','Quarta — o grupo de trabalho':'18 de março','Quinta — a mensagem':'19 de março',
+ 'Sexta de manhã — o Rafa descobre':'20 de março','Sexta — a festa da Lara':'20 de março','Sábado — a praça':'21 de março','Domingo — fim de tarde':'22 de março',
+ 'Sábado — o rolê do Matheus':'28 de março','Domingo — a chamada':'29 de março','Terceira semana — segunda-feira':'30 de março',
+ 'Terça — o trabalho em dupla':'31 de março','Quarta — a digitação':'1 de abril','Quinta — a prova':'2 de abril',
+ 'Quinta — a cantina':'2 de abril','Quinta — depois da aula':'2 de abril','Sexta — o pátio':'3 de abril',
+ 'Domingo de manhã — a feira':'5 de abril','Durante a semana — o prédio':'6 a 10 de abril','Um mês depois da mudança — sábado':'11 de abril',
+ 'Terça — o elevador':'14 de abril','Quarta — a visita':'15 de abril','Quinta — o hall':'16 de abril',
+ 'Sexta — o grupo do condomínio':'17 de abril','Sábado de manhã — a assembleia':'18 de abril','Sábado — o corredor':'18 de abril',
+ 'Domingo — o café':'19 de abril','Um mês depois':'17 de maio'
+};
+async function showDay(t){ const d=$('#daycard'), dd=$('#dayDate'); $('#dayTxt').textContent=t; const dt=DAYDATES[t]||''; dd.textContent=dt; dd.classList.remove('on'); $('#textbox').classList.remove('on'); d.classList.add('on'); if(dt){ await sleep(900); dd.classList.add('on'); await sleep(2400); } else await sleep(1900); d.classList.remove('on'); await sleep(500); }
 
 function phone(title,msgs){ return new Promise(res=>{ const ov=$('#phone'),list=$('#phMsgs'); $('#phTitle').textContent=title; list.innerHTML=''; ov.classList.add('on'); $('#textbox').classList.remove('on'); let i=0; const step=()=>{ if(i<msgs.length){ const [who,txt]=msgs[i++]; const d=document.createElement('div'); d.className='m '+who; d.innerHTML=fmt(txt); list.appendChild(d); list.scrollTop=list.scrollHeight; sfx('click'); } else { ov.onclick=null; ov.classList.remove('on'); res(); } }; step(); ov.onclick=step; }); }
 
@@ -844,6 +863,16 @@ pro_3: [
   D('celine','De um dia pro outro. Deixou até planta pra trás. Eu reguei por um tempo, depois adotei. A samambaia da minha sala é órfã do seu apartamento.','n'),
   N('Você ri. Mas a frase fica: "saiu às pressas. ninguém soube por quê."'),
   D('celine','Enfim! Amanhã você começa na escola, né? Relaxa. Gente nova sempre acha que vai ser pior do que é.','h'),
+  {jump:'pro_4'}
+],
+pro_4: [
+  {day:'Domingo à noite — a véspera'},
+  {bg:'salaCeline'},
+  N('Você arruma a mochila três vezes. Tira o estojo, põe o estojo. Confere o horário que já sabia de cor.'),
+  N('O celular vibra. Sua mãe. Ela ficou na outra cidade — foi assim que vocês decidiram, e nenhum dos dois gosta de falar sobre.'),
+  {phone:['Mãe ❤',[['you','arrumou tudo pra amanhã?'],['me','três vezes'],['you','kkkk igualzinho seu pai'],['you','come alguma coisa antes de dormir. e {nome}…'],['you','cidade nova é página nova. vai dar tudo certo'],['me','e se não der?'],['you','aí vc me liga e a gente resolve. como sempre'],['me','tá. boa noite mãe'],['you','boa noite meu bem. avisa como foi o primeiro dia. DETALHES.']]]},
+  N('Você deita olhando pro teto. Do outro lado da parede, silêncio — hoje ninguém bateu.'),
+  N('Amanhã tem escola nova. Você não sabe ainda, mas amanhã também tem uma cadeira vaga do lado da pessoa certa.'),
   {jump:'c1_1'}
 ],
 
@@ -881,6 +910,16 @@ c1_1b: [
   N('Depois pergunta de novo. As mesmas perguntas, com outras palavras, como quem confere.'),
   N('"Só pra saber quem anda com a minha irmã", ele diz, sorrindo pro retrovisor.'),
   N('Você acha simpatia. Acha. Guarda essa impressão — vamos voltar nela.'),
+  {jump:'c1_1c'}
+],
+c1_1c: [
+  {day:'Segunda à noite'},
+  {bg:'salaCeline'},
+  N('Primeira noite depois do primeiro dia. Você responde o "DETALHES." da sua mãe com um textão — e ela responde com quatorze emojis.'),
+  N('Aí chega uma mensagem de número novo.'),
+  {phone:['Isis',[['you','oi! é a isis, peguei seu número com a sofia'],['you','salva aí: DUPLA DE TRABALHO OFICIAL'],['you','amanhã na minha casa, 14h. leva canetinha se tiver'],['me','tenho canetinha de 4 cores'],['you','QUATRO CORES????'],['you','a sofia vai ter um treco quando souber'],['you','ok agora uma pergunta séria de amizade: pastel de queijo ou de carne?'],['me','queijo'],['you','resposta errada mas eu respeito'],['sys','Isis enviou um áudio de 3:47'],['me','um áudio de QUASE QUATRO MINUTOS?'],['you','é a explicação de pq vc tá errado sobre pastel. ouve tudo']]]},
+  N('Você ouve tudo. É uma tese completa, com argumento histórico, econômico e sentimental, terminando com "e é por isso que carne ganha, boa noite".'),
+  N('Você dorme rindo. Fazia tempo que uma segunda-feira não terminava assim.'),
   {jump:'c1_2'}
 ],
 c1_2: [
@@ -961,8 +1000,24 @@ c1_3c: [
   {sinal:'c1s4'},
   {choice:['"Que tipo de coisa estranha?"','"Pode deixar." (e não deixar)'],go:['c1_3d','c1_3e']}
 ],
-c1_3d:[ D('gael','Qualquer coisa. Você entende. Você parece esperto.','c'), N('Ele aperta a sua mão com um segundo a mais de força. Você entende, sim. Só que não do jeito que ele espera.'), {jump:'c1_4'} ],
-c1_3e:[ N('Você diz "pode deixar" e sustenta o sorriso dele. Andando pra casa, você percebe o que acabou de acontecer: ele tentou transformar você em vigia.'), N('Quantas pessoas ele já recrutou assim?'), {jump:'c1_4'} ],
+c1_3d:[ D('gael','Qualquer coisa. Você entende. Você parece esperto.','c'), N('Ele aperta a sua mão com um segundo a mais de força. Você entende, sim. Só que não do jeito que ele espera.'), {jump:'c1_35'} ],
+c1_3e:[ N('Você diz "pode deixar" e sustenta o sorriso dele. Andando pra casa, você percebe o que acabou de acontecer: ele tentou transformar você em vigia.'), N('Quantas pessoas ele já recrutou assim?'), {jump:'c1_35'} ],
+c1_35: [
+  {day:'Quinta de manhã — a aula'},
+  {bg:'corredor'},
+  N('Aula de história. A professora anuncia que semana que vem tem trabalho em grupo, sorteado. A sala inteira geme em coro.'),
+  {show:'matheus',ex:'h',pos:'right'},{show:'sofia',ex:'n',pos:'left'},
+  D('matheus','Professora, sorteio é loteria. E loteria vicia. A senhora quer viciar menores de idade?','h'),
+  N('Até a professora riu. Ele recolheu os aplausos com a mão, modesto que nem um trator.'),
+  D('sofia','Ele ensaia essas no espelho, só pode.','n'),
+  D('sofia','Ei… a Isis tá esquisita hoje, né? Terceira aula que ela não abre a boca. A Isis. Não abrir a boca.','n'),
+  P('Você reparou também?'),
+  D('sofia','Eu reparo em tudo. Eu só nunca sei o que fazer com o que eu reparo.','n'),
+  N('Você olha pra carteira da Isis. Ela está desenhando espirais no canto do caderno, apertando o lápis até o papel marcar.'),
+  N('Sinal nenhum toca em sala de aula. Mas você já aprendeu que o silêncio de quem sempre fala é um barulho enorme.'),
+  {hide:'all'},
+  {jump:'c1_4'}
+],
 c1_4: [
   {day:'Quinta — o intervalo'},
   {bg:'patio'},
@@ -1030,11 +1085,28 @@ c2_0: [
   {phone:['OS DA ESCADA 🪜 · 5 pessoas',[['sys','Isis criou o grupo "OS DA ESCADA 🪜"'],['sys','Isis adicionou você, Sofia, Matheus, Juliana'],['you','<b>Isis</b>oficializando: quem senta na escada tá no grupo'],['you','<b>Matheus</b>eu almoço na MESA, sou contra essa gestão'],['you','<b>Isis</b>golpista bloqueado'],['you','<b>Sofia</b>gente o {nome} entrou há duas semanas e já tem grupo, eu levei TRÊS ANOS'],['you','<b>Ju</b>kkkkkk verdade'],['me','é o poder do pastel'],['you','<b>Isis</b>REGRA UM FUNCIONA'],['you','<b>Matheus</b>amanhã tem prova de história, alguém estudou?'],['you','<b>Sofia</b>resumo no privado de todo mundo em 10 min'],['you','<b>Ju</b>sofia eu te amo'],['me','sofia presidenta']]]},
   N('Você dorme sorrindo pra tela, que nem bobo. Cidade nova, e você já tem um grupo com nome ruim e gente boa.'),
   N('Guarda essa sensação. As histórias que vêm agora acontecem com essas pessoas.'),
+  {jump:'c2_05'}
+],
+c2_05: [
+  {day:'Segunda — a grande votação'},
+  {bg:'cantina'},
+  N('A tese do áudio de 3:47 da Isis vazou no grupo. A escola amanheceu dividida.'),
+  {show:'isis',ex:'h',pos:'left'},{show:'matheus',ex:'a',pos:'right'},{show:'sofia',ex:'n',pos:'center'},
+  D('isis','A votação encerra no almoço. Democracia é isso. CARNE ou queijo — repara que eu nem preciso fazer campanha.','h'),
+  D('matheus','Fraude. A urna é o celular DELA. Exijo auditoria internacional.','a'),
+  D('sofia','Eu votei queijo e recebi um áudio de resposta de sete minutos. SETE.','t'),
+  P('Ela me mandou um de quase quatro e eu achei que era o limite.'),
+  D('sofia','Não existe limite. Uma vez ela mandou um de onze sobre por que novela das nove é melhor que série.','n'),
+  D('isis','E EU ESTAVA CERTA.','h'),
+  N('Resultado final no grupo, meio-dia: carne 9, queijo 7, um voto pra "pastel de vento" que ninguém assumiu.'),
+  N('(Foi o Matheus. Você viu ele votando. Ele sustenta até hoje que foi "protesto contra o sistema".)'),
+  N('É disso que uma semana comum é feita. Aproveita — segunda-feira também tem sorteio de trabalho, e sorteios mudam histórias.'),
+  {hide:'all'},
   {jump:'c2_1'}
 ],
 c2_1: [
   {save:'c2_1'},{chap:'c2'},
-  {day:'Segunda semana — segunda-feira'},
+  {day:'Segunda — o sorteio'},
   {bg:'corredor'},
   N('Você já sabe onde fica tudo. Inclusive o pastel. Principalmente o pastel.'),
   N('A professora sorteia os grupos do trabalho de história: você, a Olívia e o Rafa.'),
@@ -1111,9 +1183,43 @@ c2_4: [
   N('O Gael pediu pra você vigiar. O Arthur tá pedindo pra você calar. O método muda de roupa, não de dono.'),
   {choice:['Responder: "A cabeça é dela. Boa noite."','Não responder — e contar pra Olívia amanhã.','Não responder — e printar. Prova é prova.'],go:['c2_4a','c2_4b','c2_4c']}
 ],
-c2_4a:[ {phone:['Arthur',[['me','a cabeça é dela. boa noite'],['you','é exatamente disso que eu tô falando 👍'],['you','😉']]]}, N('O emoji de piscadinha fica na tela como um bilhete embaixo da porta. Você não responde mais. Mas também não apaga: prova é prova.'), {jump:'c2_5'} ],
-c2_4b:[ N('Você não dá a ele a conversa que ele quer. No dia seguinte, mostra a mensagem pra Olívia. Ela lê duas vezes e devolve o celular sem falar nada.'), N('Tem silêncio que é o som de uma ficha caindo.'), {jump:'c2_5'} ],
-c2_4c:[ N('Você printa. Salva. Não é fofoca, não é vingança: é registro. A Celine te ensinou essa palavra sem saber que ensinou.'), {jump:'c2_5'} ],
+c2_4a:[ {phone:['Arthur',[['me','a cabeça é dela. boa noite'],['you','é exatamente disso que eu tô falando 👍'],['you','😉']]]}, N('O emoji de piscadinha fica na tela como um bilhete embaixo da porta. Você não responde mais. Mas também não apaga: prova é prova.'), {jump:'c2_45'} ],
+c2_4b:[ N('Você não dá a ele a conversa que ele quer. No dia seguinte, mostra a mensagem pra Olívia. Ela lê duas vezes e devolve o celular sem falar nada.'), N('Tem silêncio que é o som de uma ficha caindo.'), {jump:'c2_45'} ],
+c2_4c:[ N('Você printa. Salva. Não é fofoca, não é vingança: é registro. A Celine te ensinou essa palavra sem saber que ensinou.'), {jump:'c2_45'} ],
+c2_45: [
+  {day:'Sexta de manhã — o Rafa descobre'},
+  {bg:'corredor'},
+  N('Sexta de manhã, o Rafa te puxa pelo braço atrás do mural. Ele descobriu — a Bê contou pra ele o que ouviu na lanchonete.'),
+  {show:'rafa',ex:'a',pos:'center'},
+  D('rafa','Então é isso? Ela saiu do grupo por causa DELE? Por minha causa— por causa de uma coisa que eu nem fiz?','a'),
+  D('rafa','Eu vou falar com ele. Agora. No portão, na frente de todo mundo.','a'),
+  {choice:['Segurar: "na frente de todo mundo é o pior jeito."','Deixar: talvez ele mereça ouvir umas verdades.'],go:['c2_45a','c2_45b']}
+],
+c2_45a:[
+  P('Rafa, pensa. Plateia é o território dele. Ele vira a vítima, a Olívia vira "a namorada do barraco", e você vira o vilão.'),
+  D('rafa','…Então a gente faz o quê? Nada?!','a'),
+  P('A gente não solta a mão dela. É mais lento. Mas é o que funciona.'),
+  D('rafa','Odeio que faz sentido.','t'),
+  N('Ele respira fundo. Desamassa a manga da camiseta. E te olha diferente — como quem acabou de te promover.'),
+  {jump:'c2_45c'}
+],
+c2_45b:[
+  N('Você não segura. No intervalo, o Rafa vai até o portão. Você vai atrás — por garantia.'),
+  {show:'arthur',ex:'c',pos:'right'},{show:'rafa',ex:'a',pos:'left'},
+  D('rafa','A gente precisa conversar sobre a Olívia.','a'),
+  D('arthur','"A gente"? Eu nem sei teu nome, campeão. E a minha namorada não é assunto de corredor.','c'),
+  N('Em dez segundos ele transformou o Rafa em "o estranho que veio criar caso". Duas meninas do primeiro ano olharam feio — pro RAFA.'),
+  D('rafa','…Como é que ele faz isso?','s'),
+  P('Plateia. É o território dele. Vem, a gente joga em outro campo.'),
+  {jump:'c2_45c'}
+],
+c2_45c:[
+  {hide:'all'},
+  N('No fim da manhã, o grupo OS DA ESCADA vibra:'),
+  {phone:['OS DA ESCADA 🪜 · 5 pessoas',[['you','<b>Isis</b>gente hoje tem festa da Lara!!'],['you','<b>Matheus</b>eu levo o som 🔊'],['you','<b>Sofia</b>vc SÓ TEM uma caixinha quebrada matheus'],['you','<b>Matheus</b>é VINTAGE'],['you','<b>Ju</b>a olívia vai?'],['you','<b>Isis</b>vai. ela confirmou. COM o arthur, mas vai'],['me','então a gente fica de olho nela hoje'],['you','<b>Isis</b>…é. fica sim.']]]},
+  N('"Com o Arthur, mas vai." Todo mundo entendeu a frase. Ninguém precisou explicar.'),
+  {jump:'c2_5'}
+],
 c2_5: [
   {day:'Sexta — a festa da Lara'},
   {bg:'festa'},
@@ -1188,6 +1294,16 @@ c3_0: [
   D('matheus','Ela tá numa semana difícil. Sorvete resolve 60% dos problemas. O resto a gente escuta.','n'),
   N('É o tipo de coisa que ele fala. É o tipo de amigo que ele é.'),
   N('Você vai lembrar dessa tarde muitas vezes. Por bons e maus motivos.'),
+  {jump:'c3_05'}
+],
+c3_05: [
+  {day:'Domingo — a chamada'},
+  {bg:'salaCeline'},
+  N('Domingo à noite, o grupo resolve fazer chamada de vídeo "de cinco minutinhos". Dura uma hora e quarenta.'),
+  {phone:['OS DA ESCADA 🪜 · chamada de vídeo',[['you','<b>Matheus</b>ok escutem: o suco verde da cantina NUNCA acaba. nunca. vcs já viram repor? EU NÃO'],['you','<b>Ju</b>lá vem'],['you','<b>Matheus</b>minha teoria: é o MESMO suco desde 2019'],['you','<b>Sofia</b>matheus o suco é reposto terça e quinta às 9h40, eu já vi, eu anoto as coisas'],['you','<b>Matheus</b>…vc ANOTA a reposição do suco?'],['you','<b>Sofia</b>eu anoto TUDO. tenho uma planilha'],['you','<b>Isis</b>MOSTRA A PLANILHA'],['sys','Sofia compartilhou a tela'],['you','<b>Ju</b>meu deus tem GRÁFICO'],['me','a coluna "nível de perigo" com o suco verde em vermelho me quebrou'],['you','<b>Isis</b>sofia vc é meu ser humano favorito'],['you','<b>Matheus</b>ok novo plano: sexta às 9h39 a gente vai TESTEMUNHAR a reposição'],['you','<b>Sofia</b>…eu topo'],['you','<b>Ju</b>vcs são ridículos. que horas?']]]},
+  N('Ficou marcado: sexta, 9h39, expedição do suco verde. Uma bobagem completa — combinada com a seriedade de um assalto a banco.'),
+  N('Amizade, no fim, é isso: gente que leva a sua bobagem a sério.'),
+  N('E é exatamente por isso que o que o Matheus vai fazer com a confiança da Sofia é tão grave. Bobagem ele respeita. Foi o segredo que ele transformou em arma.'),
   {jump:'c3_1'}
 ],
 c3_1: [
@@ -1242,6 +1358,22 @@ c3_3: [
   {phone:['Sofia',[['you','vc viu'],['you','ele começou a escrever meu nome'],['you','{nome}, ele IA contar. eu VI'],['me','eu vi tb'],['you','ele parou pq quis. dessa vez quis. e da próxima?'],['me','respira. amanhã a gente conversa pessoalmente. vc não tá sozinha nisso'],['you','eu não durmo mais direito sabia'],['you','fico esperando a próxima "brincadeira"']]]},
   N('"Fico esperando a próxima." Isso tem nome: medo com hora marcada.'),
   N('Ele nunca contou o segredo. Não precisou. O medo trabalha de graça, a noite inteira, todos os dias.'),
+  {jump:'c3_35'}
+],
+c3_35: [
+  {day:'Quinta — a prova'},
+  {bg:'corredor'},
+  N('Prova de história. A Sofia — a pessoa da planilha, dos resumos de três cores — entrega quase em branco.'),
+  {show:'sofia',ex:'s',pos:'left'},{show:'ju',ex:'n',pos:'right'},
+  N('Na saída, a professora comenta, sem maldade: "Sofia, você? Achei que tinha trocado de aluna." A sala ri. Ela ri junto. Aquele riso.'),
+  D('ju','Ei. Você virou a noite de novo? Tá com olheira de personagem de novela.','n'),
+  D('sofia','~Eu não durmo há uma semana.~ Só… esqueci de revisar.','t'),
+  N('A Sofia. Esqueceu. De revisar. A Ju franze a testa — o "eu reparo em tudo" dela ligou, mas sem saber o quê.'),
+  {show:'matheus',ex:'h',pos:'center'},
+  D('matheus','Foi mal aí a prova, Sofia. Se você tivesse ME deixado colar do seu resumo, a gente tinha ido mal JUNTOS. Isso é amizade.','h'),
+  N('Ele faz a piada, todo mundo ri, e só você vê a Sofia dobrar o canto da prova em quadradinhos cada vez menores.'),
+  N('Nota baixa não é o problema. É o termômetro. Alguma coisa está fervendo há dias — e tem nome, boné e o melhor sorriso da turma.'),
+  {hide:'all'},
   {jump:'c3_4'}
 ],
 c3_4: [
@@ -1296,6 +1428,9 @@ c3_6: [
   D('sofia','Porque eu achava que era um peso.','s'),
   D('ju','Não é peso. É vida.','h'),
   {fade:'sofia',lvl:0},
+  D('ju','Agora vem. São 9h37. A gente tem uma reposição de suco verde pra testemunhar e você é a dona da planilha.','h'),
+  N('E foram. A Sofia na frente, planilha aberta, rindo de verdade pela primeira vez em duas semanas.'),
+  N('(A reposição aconteceu às 9h41. A planilha foi atualizada. O Matheus não foi chamado.)'),
   {hide:'ju'},
   {bg:'escada'},
   {show:'sofia',ex:'d',pos:'left'},{show:'matheus',ex:'s',pos:'right'},
@@ -1328,6 +1463,27 @@ c4_0: [
   N('Ela fala isso leve. Você guarda pesado — porque lembra de alguém que acha a vida dela "assunto".'),
   D('celine','Enfim! Leva essa samambaia pequena. Filhote da minha. Todo apartamento precisa de uma coisa viva além da gente.','h'),
   N('Você volta pra casa com uma samambaia debaixo do braço e a sensação boa de ter virado gente do bairro.'),
+  {jump:'c4_05'}
+],
+c4_05: [
+  {day:'Durante a semana — o prédio'},
+  {bg:'hall'},
+  N('A semana passa nas pequenas coisas do prédio. Você já conhece a rotina: o elevador que treme no terceiro, o cheiro de bolo da Paula às quartas.'),
+  {show:'paula',ex:'h',pos:'left'},{show:'celine',ex:'h',pos:'right'},
+  D('paula','Vocês viram o capítulo de ontem? EU GRITEI. A vilã ouviu TUDO atrás da porta.','h'),
+  D('celine','Paula, eu tô três capítulos atrasada, se você contar eu mudo de prédio.','h'),
+  D('paula','Tá bom, tá bom. Só digo uma coisa: a samambaia da vilã… morreu. Simbologia.','k'),
+  D('celine','A MINHA samambaia tá ótima, obrigada.','h'),
+  N('Vocês riem. Aí o assunto escorrega, do jeito que assunto de vizinho escorrega:'),
+  D('paula','Falando em prédio… o Davi já foi síndico daqui, sabia? Uns anos atrás.','n'),
+  P('Foi? E o que aconteceu?'),
+  D('paula','Ih. Assembleia feia. Ele foi… como é que se diz… "destituído". Tinha umas multas que só ele aplicava, uns avisos que só valiam pra alguns…','n'),
+  {show:'celine',ex:'n',pos:'right'},
+  D('celine','Deixa eu adivinhar: valiam pra quem morava sozinho, pra quem chegava tarde, pra quem ele não ia com a cara.','n'),
+  D('paula','…É. Aí votaram a Dona Marta e ele nunca engoliu. Mas gente, isso é passado, ele até que anda tranquilo—','y'),
+  N('Ela muda de assunto no meio da frase, do jeito de quem sabe que não anda, não.'),
+  N('Você guarda a peça do quebra-cabeça: o Davi não é um vizinho irritado. É um homem que perdeu o poder — e escolheu a parede da Celine pra bater a saudade.'),
+  {hide:'all'},
   {jump:'c4_1'}
 ],
 c4_1: [
@@ -1421,12 +1577,12 @@ c4_5a:[
   {phone:['Condomínio Jardins · 23 pessoas',[['me','Moro no 403, parede com parede com o 402, e nunca ouvi barulho. Nem sábado, que eu tava lá: música baixa, 21h.'],['you','<b>Davi 401</b>até você? ela te pegou também'],['me','Ninguém me pegou. Eu só moro do lado e conto o que ouço: nada.'],['you','<b>Ana 502</b>é verdade que o 403 é colado no 402…'],['you','<b>Paula 302</b>eu também nunca ouvi nada, pensando bem'],['you','<b>Seu Jorge 201</b>agora que falaram, eu ouvi foi batida na parede esses dias']]]},
   N('Uma testemunha muda a matemática do boato. Duas viram maioria. E o Seu Jorge acabou de lembrar de que lado da parede vinham as batidas.'),
   {fade:'celine',lvl:1},
-  {jump:'c4_6'}
+  {jump:'c4_55'}
 ],
 c4_5b:[
   {phone:['Celine 402',[['me','vi o grupo. você não tá sozinha nessa. o que você precisar, eu moro na parede ao lado'],['you','eu tava olhando a tela sem saber o que responder'],['you','sabe o que é pior? eu comecei a me perguntar se EU que sou o problema'],['me','não é. eu moro do lado. eu sei o que ouço: nada. e tenho bilhete, print e memória'],['you','obrigada. de verdade.'],['me','amanhã a gente fala com a síndica juntos?'],['you','juntos.']]]},
   {fade:'celine',lvl:1},
-  {jump:'c4_6'}
+  {jump:'c4_55'}
 ],
 c4_5c:[
   N('Vocês desceram juntos no sábado de manhã. A Dona Marta ouviu tudo, de óculos na ponta do nariz, sem interromper.'),
@@ -1434,6 +1590,24 @@ c4_5c:[
   D('marta','Vim ouvir o seu lado, Celine. Ninguém tinha perguntado, né? Pois é. Ninguém nunca pergunta.','n'),
   D('marta','E você, do 403… guarda esse bilhete. Guarda tudo. Papel tem mais memória que vizinho.','n'),
   {fade:'celine',lvl:1},
+  {jump:'c4_55'}
+],
+c4_55: [
+  {day:'Sábado de manhã — a assembleia'},
+  {bg:'hall'},
+  N('A Dona Marta convocou uma "conversa de moradores" no hall. Sem ata, sem formalidade. Só cadeiras e a verdade.'),
+  {show:'marta',ex:'n',pos:'center'},{show:'paula',ex:'n',pos:'left'},{show:'davi',ex:'c',pos:'right'},
+  D('marta','Chegou reclamação de barulho do 402. Também chegou até mim que ninguém nunca OUVIU esse barulho. Então vamos resolver como gente: quem ouviu, levanta a mão.','n'),
+  N('Silêncio. O Seu Jorge, que tinha escrito "também notei" no grupo, olha pro próprio sapato.'),
+  D('davi','Jorge. Você mesmo comentou comigo do movimento—','c'),
+  N('E aí acontece a coisa mais corajosa que você viu num hall de prédio:'),
+  D('paula','Eu não ouvi barulho nenhum. Nunca. E fui eu que quase acreditei — então eu vou falar: o barulho desse prédio é OUTRO, e vem batendo na parede do 402 faz meses.','d'),
+  N('O Seu Jorge levanta a mão devagar. "Batida na parede eu ouvi. Agora que falaram… vinha do 401."'),
+  D('davi','Isso é um tribunal? Vocês vão acreditar na moça que chegou ontem?','a'),
+  D('marta','Ninguém aqui é tribunal, Davi. Mas a próxima conversa tem ata. Escolha em qual das duas você prefere se explicar.','d'),
+  N('Ele sai antes do fim. A plateia — a arma favorita dele — acabou de trocar de lado.'),
+  N('Mas bicho acuado morde. A Celine sabe. Por isso o que vem agora ela quis fazer olhando na cara dele.'),
+  {hide:'all'},
   {jump:'c4_6'}
 ],
 c4_6: [
@@ -1513,7 +1687,7 @@ async function run(label){
   running=true; abortRun=false;
   let cur=label;
   while(cur){
-    const seq=SCRIPT[cur]; if(!seq){ console.error('label?',cur); break; }
+    const seq=SCRIPT[cur]; if(!seq){ console.error('label inexistente:',cur); running=false; await say('NARR','(Ops — um pedaço da história não foi encontrado. Voltando ao menu.)'); showTitle(); return; }
     if(MOODS[cur]) music(MOODS[cur]);
     let next=null;
     for(let si=0; si<seq.length; si++){
@@ -1626,7 +1800,7 @@ async function showIntro(){
   run('pro_1');
 }
 $('#mNew').onclick=async()=>{ sfx('click'); if(S.name && (S.cur||Object.keys(S.done).length) && !(await askConfirm('Começar de novo apaga o progresso da história. Continuar?'))) return; const nm=S.name,g=S.g,st=S.strong; S=defaultState(); S.name=nm; S.g=g; S.strong=st; save(); $('#title').classList.remove('on'); askName().then(()=>{ $('#wG').textContent=S.g; showIntro(); }); };
-$('#mCont').onclick=()=>{ sfx('click'); if(!S.cur) return; $('#title').classList.remove('on'); audioInit(); music(true); run(S.cur); };
+$('#mCont').onclick=()=>{ sfx('click'); if(!S.cur) return; if(!SCRIPT[S.cur]){ S.cur='pro_1'; save(); } $('#title').classList.remove('on'); audioInit(); music(true); run(S.cur); };
 $('#mCred').onclick=()=>{ $('#credits').innerHTML=`<div class="inner"><h1>Sobre o jogo</h1><p>Uma visual novel educativa sobre <b>violência invisível</b> — a violência psicológica que acontece em relações do dia a dia: entre irmãos, no namoro, numa amizade, entre vizinhos.</p><p>Você se muda para uma cidade nova e vai conhecendo as pessoas aos poucos. Quanto mais perto você chega, mais consegue ver o que ninguém de fora vê — e aprende a dar nome aos padrões.</p><p style="font-size:14px;opacity:.7">Protótipo v0.2 · personagens e cenários provisórios gerados por código, para serem substituídos pelos desenhos da equipe.</p><button id="credBack">Voltar</button></div>`; $('#credits').classList.add('on'); $('#credBack').onclick=()=>$('#credits').classList.remove('on'); };
 function openOptions(){ $('#optSound').checked=!muted; $('#optStrong').checked=!!S.strong; $('#options').classList.add('on'); }
 $('#mOpt').onclick=()=>{ sfx('click'); openOptions(); };
