@@ -598,6 +598,20 @@ const BG = {
     <g transform="translate(120 250)"><rect width="150" height="100" rx="8" fill="#fff" stroke="#8ac926" stroke-width="5" transform="rotate(-3)"/><text x="72" y="40" font-size="20" text-anchor="middle" font-family="sans-serif" font-weight="bold" fill="#5a8a1a" transform="rotate(-3)">SUCO VERDE</text><text x="72" y="72" font-size="16" text-anchor="middle" font-family="sans-serif" fill="#999" transform="rotate(-3)">(por sua conta)</text></g>
     ${sombra(300,190)}${sombra(1250,220)}`),
 
+  /* você, deitado — visão em primeira pessoa */
+  descanso: ()=>CENA(CEU('#241a2e','#2b2036','#332640'),
+    `<rect width="${W}" height="${H}" fill="url(#ceu${__bg})"/>
+    <ellipse cx="800" cy="150" rx="900" ry="360" fill="#3a2c48" opacity=".5"/>
+    <g transform="translate(800 170)"><circle r="16" fill="#4a3a58"/><rect x="-8" y="-40" width="16" height="28" fill="#4a3a58"/>${[0,72,144,216,288].map(a=>`<g transform="rotate(${a})"><ellipse cx="0" cy="-95" rx="26" ry="72" fill="#554368"/></g>`).join('')}<circle r="8" fill="#6a5580"/></g>
+    <rect x="120" y="60" width="330" height="260" rx="8" fill="#141024" stroke="#4a3a58" stroke-width="12"/><path d="M285 60 v260 M120 190 h330" stroke="#4a3a58" stroke-width="7"/>${[...Array(12)].map((_,i)=>`<circle cx="${145+(i*47)%290}" cy="${80+(i*61)%220}" r="2" fill="#fff" opacity=".85"/>`).join('')}<circle cx="380" cy="120" r="30" fill="#f5efd0"/><circle cx="368" cy="112" r="8" fill="#ded8ba"/>
+    <path d="M1280 340 q40 -18 80 0 l14 40 q-54 20 -108 0 z" fill="#4a3a58"/><rect x="1300" y="300" width="44" height="44" rx="6" fill="#3a2c48"/><circle cx="1322" cy="322" r="8" fill="#ffd76b" opacity=".8"/><circle cx="1322" cy="322" r="20" fill="#ffd76b" opacity=".18"/>
+    <path d="M0 620 Q300 560 800 585 Q1300 610 1600 560 V900 H0 Z" fill="#7a4a5a"/>
+    <path d="M0 660 Q300 600 800 625 Q1300 650 1600 600 V900 H0 Z" fill="#8f5a6a"/>
+    ${[...Array(6)].map((_,i)=>`<path d="M${i*280} ${700+(i%2)*24} q140 -34 280 0" stroke="#7a4a5a" stroke-width="10" fill="none" opacity=".55"/>`).join('')}
+    <ellipse cx="600" cy="705" rx="95" ry="48" fill="#9a6575"/><ellipse cx="990" cy="712" rx="95" ry="48" fill="#9a6575"/>
+    <path d="M420 900 Q480 760 660 745 M1180 900 Q1120 765 940 748" stroke="#6a3e4e" stroke-width="12" fill="none" opacity=".5"/>
+    <ellipse cx="800" cy="880" rx="330" ry="120" fill="#bfe3f2" opacity=".10"/><ellipse cx="800" cy="895" rx="200" ry="70" fill="#bfe3f2" opacity=".12"/>
+    <path d="M60 810 q60 -40 150 -30" stroke="#5a4468" stroke-width="8" fill="none" opacity=".6"/><path d="M1540 810 q-60 -40 -150 -30" stroke="#5a4468" stroke-width="8" fill="none" opacity=".6"/>`),
   black: ()=>{ __bg++; return `<svg viewBox="0 0 16 9"><rect width="16" height="9" fill="#000"/></svg>`; },
 
   /* final — pôr do sol dourado, ipês e pipas */
@@ -665,7 +679,7 @@ $('#btnMute').onclick=()=>{ muted=!muted; $('#btnMute').textContent=muted?'🔇'
 /* ---------------- Render ---------------- */
 const sprites={};
 function setBG(key,arg){ const html=BG[key](arg); const b=$('#bg'),b2=$('#bg2'); b2.innerHTML=html; b2.style.opacity=1; setTimeout(()=>{ b.innerHTML=html; b2.style.opacity=0; },750); }
-function show(k,ex='n',pos){ let el=sprites[k]; if(!el){ el=document.createElement('div'); el.className='sprite'; el.dataset.k=k; $('#sprites').appendChild(el); sprites[k]=el; } el.classList.remove('left','center','right'); el.classList.add(pos||el.dataset.pos||'center'); el.dataset.pos=pos||el.dataset.pos||'center'; el.dataset.ex=ex; el.innerHTML=spriteSVG(k,ex,+(el.dataset.lvl||0)); requestAnimationFrame(()=>el.classList.add('on')); }
+function show(k,ex='n',pos){ let el=sprites[k]; if(!el){ el=document.createElement('div'); el.className='sprite'; el.dataset.k=k; $('#sprites').appendChild(el); sprites[k]=el; } el.classList.remove('left','center','right'); el.classList.add(pos||el.dataset.pos||'center'); el.dataset.pos=pos||el.dataset.pos||'center'; el.dataset.ex=ex; el.innerHTML=spriteSVG(k,ex,+(el.dataset.lvl||0)); void el.offsetWidth; el.classList.add('on'); }
 function hide(k){ if(k==='all'){ Object.keys(sprites).forEach(hide); return; } const el=sprites[k]; if(el) el.classList.remove('on'); }
 function focus(k){ Object.values(sprites).forEach(el=>el.classList.toggle('dim', !!k && el.dataset.k!==k && el.classList.contains('on'))); }
 function fade(k,lvl){ let el=sprites[k]; if(!el){ el=document.createElement('div'); el.className='sprite center'; el.dataset.k=k; el.dataset.pos='center'; el.dataset.ex='n'; $('#sprites').appendChild(el); sprites[k]=el; } el.classList.remove('fade1','fade2'); if(lvl) el.classList.add('fade'+lvl); el.dataset.lvl=lvl||0; el.innerHTML=spriteSVG(k, el.dataset.ex||'n', lvl||0); }
@@ -867,7 +881,7 @@ pro_3: [
 ],
 pro_4: [
   {day:'Domingo à noite — a véspera'},
-  {bg:'salaCeline'},
+  {bg:'descanso'},
   N('Você arruma a mochila três vezes. Tira o estojo, põe o estojo. Confere o horário que já sabia de cor.'),
   N('O celular vibra. Sua mãe. Ela ficou na outra cidade — foi assim que vocês decidiram, e nenhum dos dois gosta de falar sobre.'),
   {phone:['Mãe ❤',[['you','arrumou tudo pra amanhã?'],['me','três vezes'],['you','kkkk igualzinho seu pai'],['you','come alguma coisa antes de dormir. e {nome}…'],['you','cidade nova é página nova. vai dar tudo certo'],['me','e se não der?'],['you','aí vc me liga e a gente resolve. como sempre'],['me','tá. boa noite mãe'],['you','boa noite meu bem. avisa como foi o primeiro dia. DETALHES.']]]},
@@ -914,7 +928,7 @@ c1_1b: [
 ],
 c1_1c: [
   {day:'Segunda à noite'},
-  {bg:'salaCeline'},
+  {bg:'descanso'},
   N('Primeira noite depois do primeiro dia. Você responde o "DETALHES." da sua mãe com um textão — e ela responde com quatorze emojis.'),
   N('Aí chega uma mensagem de número novo.'),
   {phone:['Isis',[['you','oi! é a isis, peguei seu número com a sofia'],['you','salva aí: DUPLA DE TRABALHO OFICIAL'],['you','amanhã na minha casa, 14h. leva canetinha se tiver'],['me','tenho canetinha de 4 cores'],['you','QUATRO CORES????'],['you','a sofia vai ter um treco quando souber'],['you','ok agora uma pergunta séria de amizade: pastel de queijo ou de carne?'],['me','queijo'],['you','resposta errada mas eu respeito'],['sys','Isis enviou um áudio de 3:47'],['me','um áudio de QUASE QUATRO MINUTOS?'],['you','é a explicação de pq vc tá errado sobre pastel. ouve tudo']]]},
@@ -1049,7 +1063,7 @@ c1_4x: [
 ],
 c1_5: [
   {day:'Quinta — de noite'},
-  {bg:'salaCeline'},
+  {bg:'descanso'},
   N('Seu apartamento. Você não consegue dormir. Fica olhando pro teto, pensando no garfo parado no ar.'),
   N('TOC. TOC. Na parede. De novo. Você já nem se assusta — e isso, percebe, é o começo do problema: a gente se acostuma.'),
   N('O celular acende.'),
@@ -1080,7 +1094,7 @@ c1_6: [
 c2_0: [
   {save:'c2_0'},
   {day:'Domingo — o grupo'},
-  {bg:'salaCeline'},
+  {bg:'descanso'},
   N('Domingo à noite. Seu celular não para de vibrar. A Isis criou um grupo.'),
   {phone:['OS DA ESCADA 🪜 · 5 pessoas',[['sys','Isis criou o grupo "OS DA ESCADA 🪜"'],['sys','Isis adicionou você, Sofia, Matheus, Juliana'],['you','<b>Isis</b>oficializando: quem senta na escada tá no grupo'],['you','<b>Matheus</b>eu almoço na MESA, sou contra essa gestão'],['you','<b>Isis</b>golpista bloqueado'],['you','<b>Sofia</b>gente o {nome} entrou há duas semanas e já tem grupo, eu levei TRÊS ANOS'],['you','<b>Ju</b>kkkkkk verdade'],['me','é o poder do pastel'],['you','<b>Isis</b>REGRA UM FUNCIONA'],['you','<b>Matheus</b>amanhã tem prova de história, alguém estudou?'],['you','<b>Sofia</b>resumo no privado de todo mundo em 10 min'],['you','<b>Ju</b>sofia eu te amo'],['me','sofia presidenta']]]},
   N('Você dorme sorrindo pra tela, que nem bobo. Cidade nova, e você já tem um grupo com nome ruim e gente boa.'),
@@ -1298,7 +1312,7 @@ c3_0: [
 ],
 c3_05: [
   {day:'Domingo — a chamada'},
-  {bg:'salaCeline'},
+  {bg:'descanso'},
   N('Domingo à noite, o grupo resolve fazer chamada de vídeo "de cinco minutinhos". Dura uma hora e quarenta.'),
   {phone:['OS DA ESCADA 🪜 · chamada de vídeo',[['you','<b>Matheus</b>ok escutem: o suco verde da cantina NUNCA acaba. nunca. vcs já viram repor? EU NÃO'],['you','<b>Ju</b>lá vem'],['you','<b>Matheus</b>minha teoria: é o MESMO suco desde 2019'],['you','<b>Sofia</b>matheus o suco é reposto terça e quinta às 9h40, eu já vi, eu anoto as coisas'],['you','<b>Matheus</b>…vc ANOTA a reposição do suco?'],['you','<b>Sofia</b>eu anoto TUDO. tenho uma planilha'],['you','<b>Isis</b>MOSTRA A PLANILHA'],['sys','Sofia compartilhou a tela'],['you','<b>Ju</b>meu deus tem GRÁFICO'],['me','a coluna "nível de perigo" com o suco verde em vermelho me quebrou'],['you','<b>Isis</b>sofia vc é meu ser humano favorito'],['you','<b>Matheus</b>ok novo plano: sexta às 9h39 a gente vai TESTEMUNHAR a reposição'],['you','<b>Sofia</b>…eu topo'],['you','<b>Ju</b>vcs são ridículos. que horas?']]]},
   N('Ficou marcado: sexta, 9h39, expedição do suco verde. Uma bobagem completa — combinada com a seriedade de um assalto a banco.'),
@@ -1350,7 +1364,7 @@ c3_2a:[
 c3_2b:[ N('Depois da aula, a Sofia te encontra na escada. "Viu?", ela pergunta. Você viu.'), {jump:'c3_3'} ],
 c3_3: [
   {day:'Quarta — a digitação'},
-  {bg:'salaCeline'},
+  {bg:'descanso'},
   N('Noite. Você tá no grupo da turma — trinta e dois alunos, memes, cobrança de trabalho.'),
   {phone:['Turma 2ºB · 32 pessoas',[['you','<b>Pedro</b>alguém sabe se a prova de quinta caiu?'],['you','<b>Matheus</b>gente, sabiam que a Sofia'],['sys','Matheus está digitando…'],['sys','…'],['you','<b>Matheus</b>tá devendo um pastel pra mim? pois é. cobrem ela 😂'],['you','<b>Ju</b>kkkkk']]]},
   N('O "está digitando" durou seis segundos. Você contou.'),
@@ -1696,7 +1710,7 @@ async function run(label){
       if(Array.isArray(step)){ const [k,t,ex,o]=step; if(k!=='NARR'&&k!=='P'&&ex) show(k,ex); const nxt=seq[si+1]; const o2=Object.assign({}, o||{}, {bell: !!(nxt&&nxt.sinal)}); await say(k,t,o2); continue; }
       if(step.save){ S.cur=step.save; save(); continue; }
       if(step.chap){ curChap=step.chap; const c=CHAPTERS[curChap]; erased=[]; chapMoments=[]; chapSinais=c.sinais.map(s=>({...s})); Object.values(sprites).forEach(el=>{ el.classList.remove('fade1','fade2','dim'); el.dataset.lvl=0; }); continue; }
-      if(step.day){ await showDay(step.day); continue; }
+      if(step.day){ hide('all'); focus(null); await showDay(step.day); continue; }
       if(step.bg){ setBG(step.bg, step.arg); await sleep(350); continue; }
       if(step.show){ show(step.show,step.ex,step.pos); await sleep(250); continue; }
       if(step.hide){ hide(step.hide); continue; }
