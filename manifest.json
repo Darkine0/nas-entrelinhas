@@ -1,0 +1,14 @@
+{
+  "name": "Nas Entrelinhas",
+  "short_name": "Entrelinhas",
+  "description": "Visual novel sobre violência invisível",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#17131d",
+  "theme_color": "#17131d",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}

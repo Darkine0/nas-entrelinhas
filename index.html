@@ -4,6 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nas Entrelinhas</title>
+<meta name="theme-color" content="#17131d">
+<meta name="description" content="Uma visual novel sobre violência invisível. Você acabou de se mudar. As pessoas que você vai conhecer parecem bem. Leia com atenção.">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<meta property="og:title" content="Nas Entrelinhas">
+<meta property="og:description" content="Uma visual novel sobre violência invisível. Jogue direto no navegador.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://darkine0.github.io/nas-entrelinhas/">
+<meta property="og:image" content="https://darkine0.github.io/nas-entrelinhas/cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
 <style>
   :root{
@@ -275,6 +288,53 @@
   #phone .m.you{box-shadow:0 2px 6px rgba(0,0,0,.06)}
   /* cartão de dia */
   #dayTxt::after{content:'';display:block;width:66px;height:3px;background:#e07a9c;margin:20px auto 0;border-radius:2px;opacity:.9}
+  /* ===== POLISH 2: identidade única vidro-escuro ===== */
+  ::selection{background:#e07a9c66}
+  button:focus-visible,input:focus-visible{outline:2px solid #e07a9c;outline-offset:2px}
+  .overlay::-webkit-scrollbar,#cadList::-webkit-scrollbar,#endChap::-webkit-scrollbar{width:10px}
+  .overlay::-webkit-scrollbar-thumb,#cadList::-webkit-scrollbar-thumb,#endChap::-webkit-scrollbar-thumb{background:#e07a9c55;border-radius:5px}
+  /* cards escuros: nome, opções, confirmação, caderno */
+  #nameScreen .card,#options .card,#ask .card,#caderno .card{background:linear-gradient(180deg,rgba(34,27,45,.97),rgba(21,16,30,.98));border:1px solid #ffffff24;box-shadow:0 24px 70px rgba(0,0,0,.6);color:#f2edf5}
+  #nameScreen h3,#options h3,#caderno h3{color:#ff9dbd}
+  #nameScreen .lbl,#caderno .sub,#caderno #cadCount{color:#b5a9c2}
+  #nameScreen input{background:#141020;border-color:#ffffff2a;color:#f2edf5}
+  #nameScreen input:focus{border-color:#e07a9c}
+  #nameScreen .row button,#askNo{background:#141020;border:1.5px solid #ffffff2a;color:#e8e0ee}
+  #nameScreen .row button.sel{background:#e07a9c;border-color:#e07a9c;color:#17131d;font-weight:700}
+  #options .opt{border-bottom-color:#ffffff1c}
+  #options .opt small{color:#b5a9c2}
+  #ask .q{color:#f2edf5}
+  .pat{background:#141020;border-color:#ffffff20}
+  .pat .n{color:#ffd0e0}.pat .d{color:#cfc4da}
+  .pat.unk{border-color:#ffffff26}.pat.unk .n{color:#8d8199}
+  /* fim de capítulo / quiz no tema do jogo */
+  #endChap{background:linear-gradient(180deg,#201a2c,#151020);color:#efe9f4}
+  #endChap h2{color:#fff}
+  #endChap .eyebrow{color:#ff9dbd}
+  #endChap dt{color:#ff9dbd}
+  #endChap dd{color:#d9d0e2}
+  #endChap p{color:#cfc4da}
+  #endChap .ajuda{background:#2a1620;border-left-color:#e07a9c;color:#f0dbe4}
+  #endChap #contStory{background:#e07a9c;color:#17131d;font-weight:700}
+  #endChap #endCad{background:transparent!important;color:#ff9dbd!important;border:2px solid #e07a9c!important}
+  .quiz{background:#141020;border-color:#e07a9c;box-shadow:0 14px 40px rgba(0,0,0,.4)}
+  .quiz .quote{color:#fff}
+  .quiz .who{color:#b5a9c2}
+  #endChap .quiz .opts button{background:#1e1830;border-color:#ffffff2e;color:#efe9f4;font-weight:400}
+  #endChap .quiz .opts button:hover{background:#2c2344}
+  #endChap .quiz .opts button.right{background:#e07a9c;border-color:#e07a9c;color:#17131d;font-weight:700}
+  #endChap .quiz .opts button.reveal{color:#ff9dbd;border-color:#ff9dbd}
+  .quiz .fb{background:#2a1620;border-left-color:#e07a9c;color:#f0dbe4}
+  .quiz .fb b{color:#ff9dbd}
+  .quiz .fb .rec{color:#c4b3c9}
+  #endChap .quiz .nxt{background:#e07a9c;color:#17131d;font-weight:700}
+  .quiz .qn{color:#ff9dbd}
+  /* celular desliza pra cima */
+  #phone.on .dev{animation:phin .35s cubic-bezier(.2,.8,.2,1)}
+  @keyframes phin{from{transform:translateY(46px);opacity:.4}to{transform:none;opacity:1}}
+  /* aviso inicial com marca */
+  #warn .sino{width:74px;height:74px;margin-bottom:4px;animation:wber 2.8s ease-in-out infinite}
+  @keyframes wber{0%,100%{transform:rotate(0)}6%{transform:rotate(-10deg)}12%{transform:rotate(8deg)}18%{transform:rotate(-5deg)}24%{transform:rotate(0)}}
   /* iPhones antigos sem suporte a aspect-ratio */
   @supports not (aspect-ratio: 1/1){
     .sprite{height:calc(var(--sw)*1.6)}
@@ -357,6 +417,7 @@
   <div id="rotate"><div class="ph"></div><p><b>Gire o celular</b><br>Este jogo foi feito para a tela na horizontal.</p></div>
   <div id="flash"></div><div id="fadeblack"></div>
   <div id="warn">
+    <img class="sino" src="icon-192.png" alt="">
     <h1>Nas Entrelinhas</h1>
     <div class="box">Este jogo trata de <b>violência psicológica</b> em relações do dia a dia — sem violência física explícita, mas com situações que podem ser difíceis.<br><br>Se alguma história parecer com a sua, ao longo do jogo há contatos de ajuda. Você não está sozinh<span id="wG">o</span>.</div>
     <button id="warnOk">Entendi, vamos começar</button>
@@ -803,7 +864,7 @@ async function say(k,text,opts={}){
   tx.innerHTML=''; typing=true; skipType=false;
   const spans=segs.map(sg=>{ const sp=document.createElement('span'); if(sg.ap) sp.className='ap'; tx.appendChild(sp); return sp; });
   const speed=opts.slow?60:22;
-  outer: for(let i=0;i<segs.length;i++){ const sg=segs[i]; for(let j=0;j<sg.s.length;j++){ if(skipType){ spans.forEach((sp,q)=>sp.textContent=segs[q].s); break outer; } spans[i].textContent+=sg.s[j]; if(j%2===0&&!' .,…!?—'.includes(sg.s[j])) blip(k||'NARR'); await sleep(sg.s[j]==='.'?speed*5:speed); } }
+  outer: for(let i=0;i<segs.length;i++){ const sg=segs[i]; for(let j=0;j<sg.s.length;j++){ if(skipType){ spans.forEach((sp,q)=>sp.textContent=segs[q].s); break outer; } spans[i].textContent+=sg.s[j]; if(j%2===0&&!' .,…!?—'.includes(sg.s[j])) blip(k||'NARR'); await sleep('.'.includes(sg.s[j])?speed*5:(',;'.includes(sg.s[j])?speed*3:('?!…—'.includes(sg.s[j])?speed*4:speed))); } }
   typing=false; nx.classList.add('on');
   if(opts.bell) setTimeout(bell,350);
   await new Promise(r=>waitClick=r); waitClick=null;
@@ -1865,6 +1926,7 @@ async function doCredits(){
   $('#textbox').classList.remove('on'); music('emotivo'); await fx('fadeout'); hide('all');
   const tot=Object.values(S.sin).reduce((a,b)=>a+b.got,0), totT=Object.values(S.sin).reduce((a,b)=>a+b.total,0);
   $('#credits').innerHTML=`<div class="inner"><h1>Nas Entrelinhas</h1>
+    <div style="display:flex;justify-content:center;align-items:flex-end;gap:0;height:190px;margin:14px 0 6px">${['isis1','sofia4','olivia3','celine1'].map((f,i)=>`<img src="${SPRD}${f}.webp" alt="" style="height:${170+(i%2)*20}px;margin:0 -14px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5))">`).join('')}</div>
     <div class="q">"Não deixa marca. Deixa silêncio.<br>Invisível só enquanto ninguém dá nome."</div>
     <p>Obrigad${S.g==='e'?'e':S.g} por jogar, <b>${S.name}</b>. Você ligou ${tot} de ${totT} pontos e reconheceu ${Object.keys(S.pat||{}).length} dos ${Object.keys(PATTERNS).length} padrões do Caderno.</p>
     <div class="help"><b>Se você precisar de ajuda — ou conhecer alguém que precise:</b><br>
