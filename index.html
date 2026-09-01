@@ -93,6 +93,20 @@
   #askYes{background:var(--wine);border:0;color:#fff;font-weight:700}
   #askNo{background:#fff;border:2px solid var(--line);color:var(--ink)}
 
+  /* novidades */
+  #news{flex-direction:column;z-index:80}
+  #news .card{background:linear-gradient(180deg,rgba(34,27,45,.97),rgba(21,16,30,.98));border:1px solid #ffffff24;border-radius:8px;padding:24px 28px;display:flex;flex-direction:column;gap:12px;width:min(94vw,620px);max-height:88vh;box-shadow:0 24px 70px rgba(0,0,0,.6);color:#f2edf5;margin:auto}
+  #news .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+  #news h3{font-family:var(--disp);font-size:26px;color:#ff9dbd}
+  #newsVer{font-size:13px;color:#b5a9c2;letter-spacing:.08em;text-transform:uppercase}
+  #newsList{overflow:auto;display:flex;flex-direction:column;gap:14px;padding-right:6px}
+  .nver{border:1px solid #ffffff20;border-left:4px solid #e07a9c;border-radius:6px;padding:12px 16px;background:#141020}
+  .nver .vh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
+  .nver .vn{font-family:var(--disp);font-size:18px;color:#ffd0e0}
+  .nver .vt{font-size:12px;color:#8d8199;letter-spacing:.06em}
+  .nver ul{margin:0;padding-left:18px;font-size:14px;line-height:1.55;color:#d9d0e2}
+  .nver li{margin:2px 0}
+  #news .go{background:#e07a9c;color:#17131d;border:0;border-radius:6px;font-size:15px;padding:10px 24px;cursor:pointer;align-self:flex-end;font-weight:700}
   /* caderno */
   #caderno{flex-direction:column;z-index:80}
   #caderno .card{background:var(--paper);border-radius:8px;padding:24px 28px;display:flex;flex-direction:column;gap:12px;width:min(94vw,640px);max-height:88vh;box-shadow:0 12px 40px rgba(0,0,0,.4)}
@@ -373,6 +387,12 @@
     <div class="row"><button id="askYes">Sim</button><button id="askNo">Voltar</button></div>
   </div></div>
 
+  <div id="news" class="overlay"><div class="card">
+    <div class="top"><h3>O que há de novo?</h3><span id="newsVer"></span></div>
+    <div id="newsList"></div>
+    <button class="go" id="newsClose">Fechar</button>
+  </div></div>
+
   <div id="caderno" class="overlay"><div class="card">
     <div class="top"><h3>Caderno de Padrões</h3><span id="cadCount"></span></div>
     <p class="sub">Cada padrão que você reconhece no "Ligue os pontos" entra aqui — com todos os lugares onde ele apareceu.</p>
@@ -408,6 +428,7 @@
         <button id="mNew">Começar</button>
         <button id="mCont">Continuar</button>
         <button id="mOpt">Opções</button>
+        <button id="mNews">O que há de novo?</button>
         <button id="mCred">Sobre o jogo</button>
       </div>
     </div>
@@ -432,6 +453,44 @@
 /* =========================================================
    NAS ENTRELINHAS v0.2 — história linear, jogador presente
    ========================================================= */
+const VERSION='1.0';
+const CHANGELOG=[
+ {v:'1.0', t:'Lançamento — 1 de setembro', itens:[
+   'Versão de lançamento! Obrigado a todo mundo que testou.',
+   '"Ligue os pontos" reformulado: pergunta clara e alternativas com explicação — agora é raciocínio, não adivinhação.',
+   'Todos os 83 desenhos dos personagens com recorte definitivo (adeus, cabelos comidos e vãos pretos).',
+   'Ícone próprio, capa bonita ao compartilhar o link e opção de "adicionar à tela inicial" no celular.']},
+ {v:'0.9', t:'Polimento visual', itens:[
+   'Todas as telas no mesmo tema vidro-escuro do jogo.',
+   'Créditos com as quatro protagonistas.',
+   'Ritmo de digitação natural: as falas respiram nas vírgulas e pontos.']},
+ {v:'0.8', t:'Cena viva', itens:[
+   'Caixa de diálogo nova, com a cor de quem está falando.',
+   'Câmera com movimento suave nos cenários e luz que muda com o clima da cena.',
+   'Quem fala se destaca no palco; o sino agora emite uma onda dourada.']},
+ {v:'0.7', t:'O mundo desenhado pela equipe', itens:[
+   '14 cenários desenhados: escola, prédio, praça, feira, festa e mais.',
+   'Cenas novas de rua (a carona) e do portão da escola.']},
+ {v:'0.6', t:'O elenco desenhado pela equipe', itens:[
+   '83 artes de personagens entram no jogo.',
+   'Uniforme escolar automático nos períodos de escola.',
+   'O arco visual da Olívia: os brincos somem quando ela apaga; fase de preto.']},
+ {v:'0.5', t:'A história cresceu', itens:[
+   '9 cenas novas: a votação do pastel, a expedição do suco verde, as mensagens da sua mãe…',
+   'Calendário com datas surgindo em suspense (7 de março a 17 de maio).',
+   'Cena de descanso em primeira pessoa: você deitado, olhando o teto.']},
+ {v:'0.4', t:'Som e apego', itens:[
+   'Cada personagem ganhou voz própria nos diálogos.',
+   'Trilha com melodia e eco de ambiente.',
+   'Menu animado e 4 cenas de convivência (a pelada, o grupo OS DA ESCADA…).']},
+ {v:'0.3', t:'Você na história', itens:[
+   'História linear: você se muda pra cidade e participa de tudo.',
+   'Tensão de verdade: bilhetes por baixo da porta, mensagens de número desconhecido, o "está digitando…".']},
+ {v:'0.2', t:'A base', itens:[
+   'Quatro histórias sobre violência invisível: irmãos, namoro, amizade, vizinhos.',
+   'O sino dos sinais, o Ligue os pontos e o Caderno de Padrões.',
+   'Contatos reais de ajuda ao fim de cada capítulo.']},
+];
 const $ = s => document.querySelector(s);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
@@ -873,7 +932,7 @@ async function say(k,text,opts={}){
   if(opts.bell) setTimeout(bell,350);
   await new Promise(r=>waitClick=r); waitClick=null;
 }
-function busy(){ return ['#choices','#phone','#nameScreen','#options','#caderno','#ask'].some(s=>$(s).classList.contains('on')) || ['#title','#endChap'].some(s=>$(s).classList.contains('on')) || $('#credits').classList.contains('on') || getComputedStyle($('#rotate')).display!=='none'; }
+function busy(){ return ['#choices','#phone','#nameScreen','#options','#caderno','#ask','#news'].some(s=>$(s).classList.contains('on')) || ['#title','#endChap'].some(s=>$(s).classList.contains('on')) || $('#credits').classList.contains('on') || getComputedStyle($('#rotate')).display!=='none'; }
 function advance(){ if(busy()) return; const now=Date.now(); if(now-lastAdvance<180) return; lastAdvance=now; if(typing){ skipType=true; return; } if(waitClick){ sfx('click'); waitClick(); } }
 $('#textbox').onclick=advance; $('#stage').onclick=e=>{ if(e.target.closest('#textbox')) return; advance(); };
 document.addEventListener('keydown',e=>{ if(e.code==='Space'||e.code==='Enter'){ const a=document.activeElement; if(a&&(a.tagName==='INPUT'||a.tagName==='BUTTON'||a.tagName==='LABEL')) return; e.preventDefault(); advance(); } });
@@ -1952,6 +2011,7 @@ function showTitle(){
   $('#endChap').classList.remove('on');
   $('#title').classList.add('on');
   if(!$('#titleBg').firstChild) $('#titleBg').innerHTML=titleBG();
+  $('#ver').textContent='v'+VERSION+' · roteiro, arte e testes: a equipe';
   $('#titleGirls').innerHTML=[['celine','celine1'],['sofia','sofia1'],['olivia','olivia3'],['isis','isis1']].map(([k,f])=>`<div class="tg"><img src="${SPRD}${f}.webp" alt=""></div>`).join('');
   $('#mCont').disabled=!(S.name && S.cur);
   $('#mNew').textContent = (S.name && (S.cur||Object.keys(S.done).length)) ? 'Começar de novo' : 'Começar';
@@ -1988,6 +2048,9 @@ $('#mCont').onclick=()=>{ sfx('click'); if(!S.cur) return; if(!SCRIPT[S.cur]){ S
 $('#mCred').onclick=()=>{ $('#credits').innerHTML=`<div class="inner"><h1>Sobre o jogo</h1><p>Uma visual novel educativa sobre <b>violência invisível</b> — a violência psicológica que acontece em relações do dia a dia: entre irmãos, no namoro, numa amizade, entre vizinhos.</p><p>Você se muda para uma cidade nova e vai conhecendo as pessoas aos poucos. Quanto mais perto você chega, mais consegue ver o que ninguém de fora vê — e aprende a dar nome aos padrões.</p><p style="font-size:14px;opacity:.7">Protótipo v0.2 · personagens e cenários provisórios gerados por código, para serem substituídos pelos desenhos da equipe.</p><button id="credBack">Voltar</button></div>`; $('#credits').classList.add('on'); $('#credBack').onclick=()=>$('#credits').classList.remove('on'); };
 function openOptions(){ $('#optSound').checked=!muted; $('#optStrong').checked=!!S.strong; $('#options').classList.add('on'); }
 $('#mOpt').onclick=()=>{ sfx('click'); openOptions(); };
+function openNews(){ $('#newsVer').textContent='versão atual: v'+VERSION; $('#newsList').innerHTML=CHANGELOG.map(c=>`<div class="nver"><div class="vh"><span class="vn">v${c.v}</span><span class="vt">${c.t}</span></div><ul>${c.itens.map(i=>`<li>${i}</li>`).join('')}</ul></div>`).join(''); $('#news').classList.add('on'); }
+$('#mNews').onclick=()=>{ sfx('click'); openNews(); };
+$('#newsClose').onclick=()=>{ sfx('click'); $('#news').classList.remove('on'); };
 $('#btnOpt').onclick=()=>{ if($('#options').classList.contains('on')) return; openOptions(); };
 $('#optSound').onchange=e=>{ muted=!e.target.checked; $('#btnMute').textContent=muted?'🔇':'🔊'; };
 $('#optStrong').onchange=e=>{ S.strong=e.target.checked; save(); };
