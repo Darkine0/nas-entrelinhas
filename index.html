@@ -321,6 +321,10 @@
   .quiz .quote{color:#fff}
   .quiz .who{color:#b5a9c2}
   #endChap .quiz .opts button{background:#1e1830;border-color:#ffffff2e;color:#efe9f4;font-weight:400}
+  #endChap .quiz .pergunta{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#ff9dbd;font-weight:700;margin:2px 0 10px}
+  #endChap .quiz .opts button b{display:block;font-size:15.5px}
+  #endChap .quiz .opts button small{display:block;font-size:12.5px;color:#b5a9c2;margin-top:3px;font-weight:400}
+  #endChap .quiz .opts button.right small,#endChap .quiz .opts button.right b{color:#17131d}
   #endChap .quiz .opts button:hover{background:#2c2344}
   #endChap .quiz .opts button.right{background:#e07a9c;border-color:#e07a9c;color:#17131d;font-weight:700}
   #endChap .quiz .opts button.reveal{color:#ff9dbd;border-color:#ff9dbd}
@@ -901,19 +905,19 @@ function phone(title,msgs){ return new Promise(res=>{ const ov=$('#phone'),list=
 
 /* ---------------- Padrões ---------------- */
 const PATTERNS = {
-  cuidado:  {n:'Cuidado que invade',        d:'"Eu só tô cuidando" — dito enquanto entra sem bater, lê o celular, decide pelo outro. Cuidado de verdade pede; controle pega.'},
-  recado:   {n:'Recado só pra ela',         d:'Uma frase inocente para quem está em volta e uma ameaça para uma pessoa só. Ninguém vê — e é essa a intenção.'},
-  arma:     {n:'Segredo como arma',         d:'Algo contado em confiança vira moeda: "se eu quisesse, contava". Não precisa contar. Ameaçar já basta.'},
-  culpa:    {n:'Culpa como coleira',        d:'"Se você gostasse de mim…" A responsabilidade pela reação dele é empurrada pra ela.'},
-  elogio:   {n:'Crítica vestida de elogio', d:'"Fica mais bonita natural." Parece carinho, funciona como correção. É assim que começa.'},
-  proibir:  {n:'Proibir sem proibir',       d:'"Não tô proibindo, só tô dizendo que não gosto." A decisão continua dele; a culpa, dela.'},
-  menos:    {n:'Uma pessoa a menos',        d:'Primeiro as amigas, depois os colegas. Cada pessoa afastada é uma pessoa a menos pra perceber.'},
-  medida:   {n:'Reclamação sem medida',     d:'A reclamação é maior que o motivo — e vem sempre. Não é sobre o barulho; é sobre a pessoa.'},
-  assunto:  {n:'A vida dela vira assunto',  d:'Horário, estado civil, visitas. Nada disso é da conta dele — e o "brincadeira" tira dela o direito de se incomodar.'},
-  plateia:  {n:'Piada com plateia',         d:'O constrangimento precisa de público. Quem ouve não viu nada, mas agora "ouviu falar".'},
-  boato:    {n:'Boato com cara de cuidado', d:'"Dizem que tem mais coisa, mas não vou expor ninguém." Difamação assinada como preocupação.'},
-  exagero:  {n:'"Você tá exagerando"',      d:'Desqualificar o que a pessoa sentiu pra ela duvidar — e calar. É o mais invisível de todos.'},
-  padrao:   {n:'Uma vez é piada, toda vez é padrão', d:'Isolada, a frase parece bobagem. Repetida, é um sistema — e o sistema tem dono.'},
+  cuidado:  {n:'Cuidado que invade', q:'controlar dizendo que é proteção', d:'"Eu só tô cuidando" — dito enquanto entra sem bater, lê o celular, decide pelo outro. Cuidado de verdade pede; controle pega.'},
+  recado:   {n:'Recado só pra ela', q:'ameaça disfarçada que só o alvo entende', d:'Uma frase inocente para quem está em volta e uma ameaça para uma pessoa só. Ninguém vê — e é essa a intenção.'},
+  arma:     {n:'Segredo como arma', q:'usar um segredo confiado para mandar na pessoa', d:'Algo contado em confiança vira moeda: "se eu quisesse, contava". Não precisa contar. Ameaçar já basta.'},
+  culpa:    {n:'Culpa como coleira', q:'cobrar amor pra conseguir obediência', d:'"Se você gostasse de mim…" A responsabilidade pela reação dele é empurrada pra ela.'},
+  elogio:   {n:'Crítica vestida de elogio', q:'corrigir a pessoa fingindo elogiar', d:'"Fica mais bonita natural." Parece carinho, funciona como correção. É assim que começa.'},
+  proibir:  {n:'Proibir sem proibir', q:'proibir dizendo que "só não gosta"', d:'"Não tô proibindo, só tô dizendo que não gosto." A decisão continua dele; a culpa, dela.'},
+  menos:    {n:'Uma pessoa a menos', q:'afastar amigos e aliados de quem sofre', d:'Primeiro as amigas, depois os colegas. Cada pessoa afastada é uma pessoa a menos pra perceber.'},
+  medida:   {n:'Reclamação sem medida', q:'reclamação constante, maior que o motivo', d:'A reclamação é maior que o motivo — e vem sempre. Não é sobre o barulho; é sobre a pessoa.'},
+  assunto:  {n:'A vida dela vira assunto', q:'comentar a vida alheia como se fosse da conta dele', d:'Horário, estado civil, visitas. Nada disso é da conta dele — e o "brincadeira" tira dela o direito de se incomodar.'},
+  plateia:  {n:'Piada com plateia', q:'constranger de leve na frente dos outros', d:'O constrangimento precisa de público. Quem ouve não viu nada, mas agora "ouviu falar".'},
+  boato:    {n:'Boato com cara de cuidado', q:'espalhar suspeita fingindo preocupação', d:'"Dizem que tem mais coisa, mas não vou expor ninguém." Difamação assinada como preocupação.'},
+  exagero:  {n:'"Você tá exagerando"', q:'fazer a pessoa duvidar do que sentiu', d:'Desqualificar o que a pessoa sentiu pra ela duvidar — e calar. É o mais invisível de todos.'},
+  padrao:   {n:'Uma vez é piada, toda vez é padrão', q:'a mesma "brincadeira" repetida sempre', d:'Isolada, a frase parece bobagem. Repetida, é um sistema — e o sistema tem dono.'},
 };
 
 const CHAPTERS = {
@@ -964,10 +968,10 @@ function quiz(container, moments, cid){
       const q=qs[i]; const isDecoy=q.correct==='__cuidado';
       const pool=allPids.filter(p=>p!==q.correct); const same=CHAPTERS[cid].sinais.map(s=>s.p).filter(p=>p!==q.correct);
       const dist=[...new Set([...same.sort(()=>Math.random()-.5), ...pool.sort(()=>Math.random()-.5)])].slice(0,2);
-      const opts=[ ...dist.map(p=>({id:p,label:PATTERNS[p].n})), isDecoy?{id:'__cuidado',label:'Cuidado de verdade — isso não é um sinal'}:{id:q.correct,label:PATTERNS[q.correct].n} ];
-      if(!isDecoy && Math.random()<.5) opts.push({id:'__cuidado',label:'Cuidado de verdade — isso não é um sinal'});
+      const optHtml=p=>`<b>${PATTERNS[p].n}</b><small>${PATTERNS[p].q}</small>`;
+      const opts=[ ...dist.map(p=>({id:p,label:optHtml(p)})), isDecoy?{id:'__cuidado',label:'<b>Cuidado de verdade</b><small>não esconde nada — foi afeto, sem cobrança</small>'}:{id:q.correct,label:optHtml(q.correct)} ];
       opts.sort(()=>Math.random()-.5);
-      el.innerHTML=`<div class="qn">Ligue os pontos · ${i+1} de ${qs.length}</div><div class="quote">${q.q}</div><div class="who">${q.who||''}</div><div class="opts">${opts.map(o=>`<button data-id="${o.id}">${o.label}</button>`).join('')}</div><div class="fb"></div><button class="nxt">${i+1<qs.length?'Próxima':'Ver resultado'}</button>`;
+      el.innerHTML=`<div class="qn">Ligue os pontos · ${i+1} de ${qs.length}</div><div class="quote">${q.q}</div><div class="who">${q.who||''}</div><div class="pergunta">O que essa fala esconde?</div><div class="opts">${opts.map(o=>`<button data-id="${o.id}">${o.label}</button>`).join('')}</div><div class="fb"></div><button class="nxt">${i+1<qs.length?'Próxima':'Ver resultado'}</button>`;
       el.querySelectorAll('.opts button').forEach(b=>b.onclick=()=>{
         const ok=b.dataset.id===q.correct; if(ok) score++;
         el.querySelectorAll('.opts button').forEach(x=>{ x.disabled=true; if(x.dataset.id===q.correct) x.classList.add(ok?'right':'reveal'); else if(x===b) x.classList.add('wrong'); });
