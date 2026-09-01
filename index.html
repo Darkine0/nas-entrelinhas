@@ -449,7 +449,7 @@ const SPR={
  sofia:{casual:{n:'sofia1',h:'sofia4',k:'sofia2',y:'sofia3',s:'sofia2',t:'sofia2',d:'sofia4',a:'sofia2'},
         uni:{n:'sofia_uniforme2',h:'sofia_uniforme4',y:'sofia_uniforme3',s:'sofia_uniforme1',t:'sofia_uniforme1',d:'sofia_uniforme2',k:'sofia_uniforme4',a:'sofia_uniforme1'}},
 };
-const UNI_BGS=new Set(['corredor','cantina','escada','patio']);
+const UNI_BGS=new Set(['corredor','cantina','escada','patio','portao','rua']);
 let curBGkey='';
 function pickImg(k,ex,lvl){
   const e=SPR[k]; if(!e) return null;
@@ -723,7 +723,16 @@ $('#btnMute').onclick=()=>{ muted=!muted; $('#btnMute').textContent=muted?'🔇'
 
 /* ---------------- Render ---------------- */
 const sprites={};
-function setBG(key,arg){ curBGkey=key; const html=BG[key](arg); const b=$('#bg'),b2=$('#bg2'); b2.innerHTML=html; b2.style.opacity=1; setTimeout(()=>{ b.innerHTML=html; b2.style.opacity=0; },750); }
+/* cenários desenhados pela equipe (lug/) — fallback: gerados por código */
+const BGIMG={ predio:'l03', cozinha:'l05', rua:'l06', cantina:'l07', praca:'l08', portao:'l09', escada:'l10', patio:'l11', quartoIsis:'l13', corredor:'l14', hall:'l16', festa:'l02' };
+function bgHTML(key,arg){
+  let f=BGIMG[key];
+  if(key==='salaCeline') f = arg ? 'l04' : 'l12';
+  if(f) return `<img src="lug/${f}.webp" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`;
+  return BG[key](arg);
+}
+function setBG(key,arg){ curBGkey=key; const html=bgHTML(key,arg); const b=$('#bg'),b2=$('#bg2'); b2.innerHTML=html; b2.style.opacity=1; setTimeout(()=>{ b.innerHTML=html; b2.style.opacity=0; },750); }
+BG.rua=()=>BG.praca(); BG.portao=()=>BG.patio();
 function show(k,ex='n',pos){ let el=sprites[k]; if(!el){ el=document.createElement('div'); el.className='sprite'; el.dataset.k=k; $('#sprites').appendChild(el); sprites[k]=el; } el.classList.remove('left','center','right'); el.classList.add(pos||el.dataset.pos||'center'); el.dataset.pos=pos||el.dataset.pos||'center'; el.dataset.ex=ex; el.innerHTML=spriteHTML(k,ex,+(el.dataset.lvl||0)); void el.offsetWidth; el.classList.add('on'); }
 function hide(k){ if(k==='all'){ Object.keys(sprites).forEach(hide); return; } const el=sprites[k]; if(el) el.classList.remove('on'); }
 function focus(k){ Object.values(sprites).forEach(el=>el.classList.toggle('dim', !!k && el.dataset.k!==k && el.classList.contains('on'))); }
@@ -963,7 +972,7 @@ c1_1: [
   {jump:'c1_1b'}
 ],
 c1_1b: [
-  {bg:'predio'},
+  {bg:'rua'},
   N('No carro, o Gael é exatamente o que a Isis prometeu: engraçado, gente boa, com uma playlist melhor que a sua.'),
   N('Ele pergunta seu nome. De onde você veio. De quem você já é amig{g}.'),
   N('Depois pergunta de novo. As mesmas perguntas, com outras palavras, como quem confere.'),
@@ -1120,7 +1129,7 @@ c1_5: [
 ],
 c1_6: [
   {day:'Sexta — o portão'},
-  {bg:'patio'},
+  {bg:'portao'},
   {show:'isis',ex:'h',pos:'center'},{fade:'isis',lvl:0},
   N('Sexta de manhã, a Isis te espera no portão. Os olhos estão inchados. E leves.'),
   D('isis','Contei. Tudo. Minha mãe me ouviu até o fim, do jeito que eu pedi.','n'),
