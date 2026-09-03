@@ -35,10 +35,9 @@
   #bg2{opacity:0;pointer-events:none}
   #sprites{position:absolute;inset:0;pointer-events:none}
   :root{--sh:min(88vh,860px)}
-  .sprite{position:absolute;bottom:-16px;height:var(--sh);transition:opacity .45s,bottom .55s cubic-bezier(.2,.8,.2,1),filter .8s;opacity:0}
+  .sprite{position:absolute;bottom:-16px;left:50%;height:var(--sh);transform:translateX(-50%);transition:left .55s cubic-bezier(.3,.9,.3,1),bottom .55s cubic-bezier(.2,.8,.2,1),transform .45s,opacity .45s,filter .8s;opacity:0}
   .sprite.on{opacity:1;bottom:0}
-  .sprite svg,.sprite img{height:100%;width:auto;max-width:46vw;object-fit:contain;object-position:bottom;display:block;filter:drop-shadow(0 8px 14px rgba(0,0,0,.35));-webkit-user-drag:none}
-  .sprite.left{left:1%}.sprite.center{left:50%;transform:translateX(-50%)}.sprite.right{right:1%}
+  .sprite svg,.sprite img{height:100%;width:auto;max-width:44vw;object-fit:contain;object-position:bottom;display:block;filter:drop-shadow(0 8px 14px rgba(0,0,0,.35));-webkit-user-drag:none}
   .sprite.dim{filter:brightness(.6)}
   .sprite.fade1{filter:saturate(.45) brightness(.96)}
   .sprite.fade2{filter:saturate(.08) brightness(.9) contrast(.95)}
@@ -274,9 +273,7 @@
   #nametag{top:-17px;background:var(--spk,#3d4f7c);border-radius:999px;padding:4px 17px;font-size:12.5px;box-shadow:0 4px 14px rgba(0,0,0,.45),inset 0 1px 0 #ffffff36}
   #next{color:#e9a0bd}
   /* personagens: quem fala vive, quem ouve recua */
-  .sprite.talk{filter:drop-shadow(0 10px 18px rgba(0,0,0,.45)) brightness(1.06)}
-  .sprite.left.talk,.sprite.right.talk{transform:scale(1.03)}
-  .sprite.center.talk{transform:translateX(-50%) scale(1.03)}
+  .sprite.talk{transform:translateX(-50%) scale(1.035);filter:drop-shadow(0 10px 18px rgba(0,0,0,.45)) brightness(1.06)}
   .sprite.dim{filter:brightness(.52) saturate(.8) blur(.4px)}
   .sprite.dim.fade1{filter:saturate(.4) brightness(.5) blur(.4px)}
   .sprite.dim.fade2{filter:saturate(.08) brightness(.48) blur(.4px)}
@@ -906,10 +903,27 @@ function bgHTML(key,arg){
 }
 function setBG(key,arg){ curBGkey=key; const html=bgHTML(key,arg); const b=$('#bg'),b2=$('#bg2'); b2.innerHTML=html; b2.style.opacity=1; setTimeout(()=>{ b.innerHTML=html; b2.style.opacity=0; },750); }
 BG.rua=()=>BG.praca(); BG.portao=()=>BG.patio();
-function show(k,ex='n',pos){ let el=sprites[k]; if(!el){ el=document.createElement('div'); el.className='sprite'; el.dataset.k=k; $('#sprites').appendChild(el); sprites[k]=el; } el.classList.remove('left','center','right'); el.classList.add(pos||el.dataset.pos||'center'); el.dataset.pos=pos||el.dataset.pos||'center'; el.dataset.ex=ex; el.innerHTML=spriteHTML(k,ex,+(el.dataset.lvl||0)); void el.offsetWidth; el.classList.add('on'); }
-function hide(k){ if(k==='all'){ Object.keys(sprites).forEach(hide); return; } const el=sprites[k]; if(el) el.classList.remove('on'); }
+let seqN=0;
+const LAYOUTS={1:[50],2:[27,73],3:[19,50,81],4:[14,38,62,86],5:[11,30.5,50,69.5,89]};
+function relayout(){
+  const vis=Object.values(sprites).filter(el=>el.classList.contains('on'));
+  const ord={left:0,center:1,right:2};
+  vis.sort((a,b)=>((ord[a.dataset.side]??1)-(ord[b.dataset.side]??1))||(a.dataset.seq-b.dataset.seq));
+  const slots=LAYOUTS[vis.length]||LAYOUTS[5];
+  vis.forEach((el,i)=>{ const t=slots[i];
+    if(el.dataset.entering){ delete el.dataset.entering; el.style.left=(t<50?-14:114)+'%'; void el.offsetWidth; }
+    el.style.left=t+'%';
+  });
+}
+function show(k,ex='n',pos){ let el=sprites[k]; if(!el){ el=document.createElement('div'); el.className='sprite'; el.dataset.k=k; $('#sprites').appendChild(el); sprites[k]=el; }
+  const wasOn=el.classList.contains('on');
+  el.dataset.side=pos||el.dataset.side||'center'; if(!el.dataset.seq) el.dataset.seq=++seqN;
+  el.dataset.ex=ex; el.innerHTML=spriteHTML(k,ex,+(el.dataset.lvl||0));
+  if(!wasOn) el.dataset.entering='1';
+  void el.offsetWidth; el.classList.add('on'); relayout(); }
+function hide(k){ if(k==='all'){ Object.keys(sprites).forEach(kk=>{ const e=sprites[kk]; if(e) e.classList.remove('on'); }); return; } const el=sprites[k]; if(el){ el.classList.remove('on'); relayout(); } }
 function focus(k){ Object.values(sprites).forEach(el=>{ el.classList.toggle('dim', !!k && el.dataset.k!==k && el.classList.contains('on')); el.classList.toggle('talk', !!k && el.dataset.k===k && el.classList.contains('on')); }); }
-function fade(k,lvl){ let el=sprites[k]; if(!el){ el=document.createElement('div'); el.className='sprite center'; el.dataset.k=k; el.dataset.pos='center'; el.dataset.ex='n'; $('#sprites').appendChild(el); sprites[k]=el; } el.classList.remove('fade1','fade2'); if(lvl) el.classList.add('fade'+lvl); el.dataset.lvl=lvl||0; el.innerHTML=spriteHTML(k, el.dataset.ex||'n', lvl||0); }
+function fade(k,lvl){ let el=sprites[k]; if(!el){ el=document.createElement('div'); el.className='sprite'; el.dataset.k=k; el.dataset.side='center'; if(!el.dataset.seq) el.dataset.seq=++seqN; el.dataset.ex='n'; $('#sprites').appendChild(el); sprites[k]=el; } el.classList.remove('fade1','fade2'); if(lvl) el.classList.add('fade'+lvl); el.dataset.lvl=lvl||0; el.innerHTML=spriteHTML(k, el.dataset.ex||'n', lvl||0); }
 function fmt(t){ return t.replace(/\{nome\}/g,S.name||'você').replace(/\{g\}/g,S.g).replace(/\{s:([^|}]*)\|([^}]*)\}/g,(m,a,b)=>S.strong?b:a); }
 
 let typing=false, skipType=false, waitClick=null, lastAdvance=0;
