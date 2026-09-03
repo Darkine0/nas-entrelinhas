@@ -30,9 +30,9 @@
   button{font-family:var(--body);touch-action:manipulation}
   #game{position:relative;width:100vw;height:100vh;height:100dvh;overflow:hidden;background:#000}
   #stage{position:absolute;inset:0;overflow:hidden}
-  #bg,#bg2{position:absolute;inset:0;transition:opacity .7s}
+  #bg,#bg2{position:absolute;inset:0;opacity:0;transition:opacity .85s ease;pointer-events:none;will-change:opacity;backface-visibility:hidden}
+  #bg.show,#bg2.show{opacity:1}
   #bg svg,#bg2 svg{width:100%;height:100%;display:block}
-  #bg2{opacity:0;pointer-events:none}
   #sprites{position:absolute;inset:0;pointer-events:none}
   :root{--sh:min(88vh,860px)}
   .sprite{position:absolute;bottom:-16px;left:50%;height:var(--sh);transform:translateX(-50%);transition:left .55s cubic-bezier(.3,.9,.3,1),bottom .55s cubic-bezier(.2,.8,.2,1),transform .45s,opacity .45s,filter .8s;opacity:0}
@@ -254,8 +254,8 @@
   @media (orientation:portrait) and (pointer:coarse){ #rotate{display:flex} }
   /* ===================== POLISH DE LANÇAMENTO ===================== */
   /* câmera viva no cenário */
-  #bg img,#bg2 img{animation:kb 26s ease-in-out infinite alternate;will-change:transform}
-  @keyframes kb{from{transform:scale(1.02)}to{transform:scale(1.09) translateY(-10px)}}
+  #bg img,#bg2 img{animation:kb 34s ease-in-out infinite alternate;will-change:transform;transform:translateZ(0);backface-visibility:hidden}
+  @keyframes kb{from{transform:translateZ(0) scale(1.03)}to{transform:translate3d(0,-1.2%,0) scale(1.08)}}
   /* luz de leitura + profundidade */
   #stage::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:5;background:linear-gradient(to bottom,rgba(10,8,14,.16),transparent 20%,transparent 60%,rgba(8,6,12,.44))}
   #sprites{z-index:6}
@@ -901,7 +901,17 @@ function bgHTML(key,arg){
   if(f) return `<img src="lug/${f}.webp" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`;
   return BG[key](arg);
 }
-function setBG(key,arg){ curBGkey=key; const html=bgHTML(key,arg); const b=$('#bg'),b2=$('#bg2'); b2.innerHTML=html; b2.style.opacity=1; setTimeout(()=>{ b.innerHTML=html; b2.style.opacity=0; },750); }
+let bgFront=null;
+function setBG(key,arg){ curBGkey=key; const html=bgHTML(key,arg);
+  const a=$('#bg'), b=$('#bg2');
+  const incoming = (bgFront===a) ? b : a;
+  const outgoing = (bgFront===a) ? a : b;
+  const apply=()=>{ incoming.innerHTML=html; void incoming.offsetWidth; incoming.classList.add('show'); outgoing.classList.remove('show'); bgFront=incoming; };
+  const tmp=document.createElement('div'); tmp.innerHTML=html; const im=tmp.querySelector('img');
+  const src = im && im.getAttribute('src');
+  if(src){ const pre=new Image(); pre.src=src; if(pre.decode){ pre.decode().then(apply).catch(apply); } else if(pre.complete){ apply(); } else { pre.onload=apply; pre.onerror=apply; } }
+  else apply();
+}
 BG.rua=()=>BG.praca(); BG.portao=()=>BG.patio();
 let seqN=0;
 const LAYOUTS={1:[50],2:[27,73],3:[19,50,81],4:[14,38,62,86],5:[11,30.5,50,69.5,89]};
@@ -2077,7 +2087,8 @@ $('#warnOk').onclick=()=>{ $('#warn').style.display='none'; audioInit(); load();
 };
 if(matchMedia('(pointer:coarse)').matches) $('#hint').textContent='toque para avançar';
 /* pré-carrega os sprites desenhados em segundo plano */
-setTimeout(()=>{ const seen=new Set(); Object.values(SPR).forEach(ch=>Object.values(ch).forEach(v=>Object.values(v).forEach(f=>{ if(!seen.has(f)){ seen.add(f); const im=new Image(); im.src=SPRD+f+'.webp'; } }))); }, 1500);
+setTimeout(()=>{ const seen=new Set(); Object.values(SPR).forEach(ch=>Object.values(ch).forEach(v=>Object.values(v).forEach(f=>{ if(!seen.has(f)){ seen.add(f); const im=new Image(); im.src=SPRD+f+'.webp'; } })));
+  [...Object.values(BGIMG),'l04','l12'].forEach(f=>{ const im=new Image(); im.src='lug/'+f+'.webp'; }); }, 800);
 </script>
 </body>
 </html>
