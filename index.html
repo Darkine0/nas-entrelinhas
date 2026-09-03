@@ -157,16 +157,18 @@
   /* telas */
   .screen{position:absolute;inset:0;display:none;z-index:40;overflow:auto;background:var(--paper);color:var(--ink)}
   .screen.on{display:block}
-  #title{background:#17131d;color:#ebe6f0;overflow:hidden}
-  #titleBg{position:absolute;inset:0}
+  #title{background:#17131d;color:#f2edf5;overflow:hidden}
+  #titleBg{position:absolute;inset:0;overflow:hidden}
   #titleBg svg{width:100%;height:100%;display:block}
+  #titleBg .bgimg{width:100%;height:100%;object-fit:cover;animation:kb 42s ease-in-out infinite alternate;transform:translateZ(0);will-change:transform}
+  #titleVin{position:absolute;inset:0;box-shadow:inset 0 0 220px 60px rgba(10,8,16,.75)}
   #titleBg .tnuvem{animation:tdrift 42s ease-in-out infinite alternate}
   #titleBg .tnuvem2{animation:tdrift 58s ease-in-out infinite alternate-reverse}
   #titleBg .tpipa{animation:tbob 5.5s ease-in-out infinite alternate;transform-origin:center}
   #titleBg .tpipa2{animation:tbob 7s ease-in-out infinite alternate-reverse}
   @keyframes tdrift{from{transform:translateX(-70px)}to{transform:translateX(90px)}}
   @keyframes tbob{from{transform:translate(0,0) rotate(-3deg)}to{transform:translate(26px,-30px) rotate(5deg)}}
-  #titleShade{position:absolute;inset:0;background:linear-gradient(100deg,#17131dee 0%,#17131dcc 34%,#17131d55 58%,#17131d22 100%)}
+  #titleShade{position:absolute;inset:0;background:linear-gradient(95deg,#12101af7 0%,#12101ae8 26%,#12101a9c 50%,#12101a30 78%,#12101a10 100%),linear-gradient(0deg,#12101ad0 0%,transparent 42%)}
   #titleInner .eyebrow{animation:tfade 1.2s ease-out both}
   #titleInner h1{animation:tfade 1.2s .15s ease-out both}
   #titleInner .sub,#menu{animation:tfade 1.2s .35s ease-out both}
@@ -174,21 +176,22 @@
   #menu button{position:relative;padding-left:44px}
   #menu button::before{content:'▸';position:absolute;left:18px;color:#e07a9c;transition:transform .15s}
   #menu button:hover::before{transform:translateX(5px);color:#17131d}
-  #titleInner{position:absolute;left:7%;top:14%;max-width:560px;z-index:2}
-  #titleInner .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#e07a9c;font-weight:700}
-  #titleInner h1{font-family:var(--disp);font-size:clamp(44px,8vw,92px);line-height:1;margin:10px 0 6px;font-weight:700}
-  #titleInner h1 span{display:block;color:#7d7589;text-decoration:line-through;text-decoration-color:#e07a9c;text-decoration-thickness:3px}
-  #titleInner .sub{color:#b5adc2;font-size:17px;max-width:44ch;margin-bottom:26px}
-  #menu{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
-  #menu button{background:transparent;border:1.5px solid #e07a9c;color:#ebe6f0;padding:11px 26px;font-size:17px;border-radius:4px;cursor:pointer;min-width:220px;text-align:left;transition:background .15s}
-  #menu button:hover{background:#e07a9c;color:#17131d}
-  #menu button:disabled{opacity:.35;cursor:default}
-  #titleGirls{position:absolute;right:-2%;bottom:0;height:min(70%,38vw);display:flex;align-items:flex-end;z-index:1;pointer-events:none}
-  #titleGirls .tg{height:100%;aspect-ratio:200/320;margin-left:calc(var(--ov,-70px));filter:drop-shadow(0 8px 14px rgba(0,0,0,.4))}
-  #titleGirls .tg svg{height:100%;width:100%}
-  #titleGirls .tg img{height:100%;width:100%;object-fit:contain;object-position:bottom}
-  @media (max-width:1000px){ #titleGirls{--ov:-110px;opacity:.55} }
-  #ver{position:absolute;right:14px;bottom:10px;font-size:12px;color:#7d7589}
+  #titleInner{position:absolute;left:6.5%;top:50%;transform:translateY(-50%);max-width:min(52%,560px);z-index:3}
+  #titleInner .eyebrow{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#f2a8c2;font-weight:700}
+  #titleInner h1{font-family:var(--disp);font-size:clamp(46px,8.5vw,104px);line-height:.96;margin:12px 0 4px;font-weight:700;text-shadow:0 4px 30px rgba(0,0,0,.6)}
+  #titleInner h1 span{display:block;color:#6f6579;text-decoration:line-through;text-decoration-color:#e07a9c;text-decoration-thickness:3px;text-shadow:none}
+  #titleInner .sub{color:#cabfd6;font-size:17px;max-width:40ch;margin-bottom:26px;line-height:1.5}
+  #menu{display:flex;flex-direction:column;gap:9px;align-items:flex-start}
+  #menu button{background:rgba(20,16,28,.5);border:1.5px solid #e07a9c88;border-left:3px solid #e07a9c;color:#f2edf5;padding:11px 24px;font-size:16.5px;border-radius:6px;cursor:pointer;min-width:230px;text-align:left;transition:background .18s,border-color .18s,transform .12s;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+  #menu button:hover{background:#e07a9c;color:#17131d;border-color:#e07a9c;transform:translateX(6px)}
+  #menu button:disabled{opacity:.3;cursor:default}
+  #menu button:disabled:hover{background:rgba(20,16,28,.5);color:#f2edf5;transform:none}
+  #titleGirls{position:absolute;right:0;bottom:0;height:55vh;width:50%;display:flex;align-items:flex-end;justify-content:flex-end;z-index:2;pointer-events:none;filter:drop-shadow(0 12px 26px rgba(0,0,0,.55));-webkit-mask-image:linear-gradient(90deg,transparent,#000 22%);mask-image:linear-gradient(90deg,transparent,#000 22%)}
+  #titleGirls .tg{height:100%;display:flex;align-items:flex-end}
+  #titleGirls .tg img{height:100%;width:auto;object-fit:contain;object-position:bottom;margin-left:-9%}
+  #titleGirls .tg:first-child img{margin-left:0}
+  @media (max-width:820px){ #titleGirls{opacity:.4;height:56vh} }
+  #ver{position:absolute;right:16px;bottom:12px;font-size:12px;color:#a99fb6;z-index:3;text-shadow:0 1px 4px #000}
 
   #endChap{padding:40px 20px}
   #endChap .inner{max-width:680px;margin:0 auto}
@@ -415,6 +418,7 @@
 
   <div id="title" class="screen">
     <div id="titleBg"></div>
+    <div id="titleVin"></div>
     <div id="titleShade"></div>
     <div id="titleInner">
       <div class="eyebrow">uma visual novel sobre violência invisível</div>
@@ -449,8 +453,9 @@
 /* =========================================================
    NAS ENTRELINHAS v0.2 — história linear, jogador presente
    ========================================================= */
-const VERSION='1.0';
+const VERSION='1.2';
 const CHANGELOG=[
+ {v:'1.2', t:'Menu novo e linguagem forte', itens:['Tela de título repaginada: cenário de verdade, personagens ao lado e botões novos.','Opção "Linguagem forte" agora acrescenta palavrões nos momentos de explosão (2 por capítulo). Fica desligada por padrão.','Palco vivo: personagens deslizam pra dar espaço; troca de cenário mais fluida.','Correções: brinco da Olívia, Arthur não encolhe mais, lanchonete com arte real, todos os 16 cenários em uso.']},
  {v:'1.0', t:'Lançamento — 1 de setembro', itens:[
    'Versão de lançamento! Obrigado a todo mundo que testou.',
    '"Ligue os pontos" reformulado: pergunta clara e alternativas com explicação — agora é raciocínio, não adivinhação.',
@@ -1304,7 +1309,7 @@ c1_4: [
   {choice:['"Isso tem nome: chantagem. Cuidar não é isso."','"O que você contou pra ele continua sendo seu. Não é dívida."','"E se você contar pra sua mãe antes dele?"'],go:['c1_4a','c1_4b','c1_4c']}
 ],
 c1_4a:[ D('isis','Chantagem… Falado assim, em voz alta, parece óbvio. Por que dentro de casa não parece?','s'), {jump:'c1_4x'} ],
-c1_4b:[ D('isis','Minha dívida… Eu tava me sentindo devendo. Que absurdo, né? Eu confiei nele.','s'), {jump:'c1_4x'} ],
+c1_4b:[ D('isis','Minha dívida… Eu tava me sentindo devendo. {s:Que absurdo, né?|Que merda, né?} Eu confiei nele.','s'), {jump:'c1_4x'} ],
 c1_4c:[ D('isis','Eu pensei nisso. Mas e se ela acreditar nele? Ele é o mais velho, o "responsável". Ele seca a louça.','s'), {jump:'c1_4x'} ],
 c1_4x: [
   P('Então não vai sozinha. Se quiser, eu vou junto até a porta. Você fala, eu só fico por perto.'),
@@ -1474,7 +1479,7 @@ c2_45b:[
   D('rafa','A gente precisa conversar sobre a Olívia.','a'),
   D('arthur','"A gente"? Eu nem sei teu nome, campeão. E a minha namorada não é assunto de corredor.','c'),
   N('Em dez segundos ele transformou o Rafa em "o estranho que veio criar caso". Duas meninas do primeiro ano olharam feio — pro RAFA.'),
-  D('rafa','…Como é que ele faz isso?','s'),
+  D('rafa','…{s:Como é que ele faz isso?|Como é que esse cara faz essa merda?}','s'),
   P('Plateia. É o território dele. Vem, a gente joga em outro campo.'),
   {jump:'c2_45c'}
 ],
@@ -1532,8 +1537,8 @@ c2_7: [
   D('olivia','Não. Eu tô terminando porque eu não consigo mais escolher nada sem pensar em como você vai reagir.','d'),
   D('arthur','Eu mudo. Sério. Me dá uma chance.','s'),
   D('olivia','Você teve todas. Acabou, Arthur.','d'),
-  D('arthur','Você vai se arrepender. Todo mundo vai saber que você surtou do nada.','a'),
-  D('olivia','Conta. E quando te perguntarem o que aconteceu, torce pra ninguém ter print.','d'),
+  D('arthur','Você vai se arrepender. {s:Todo mundo vai saber que você surtou do nada.|Todo mundo vai saber que você surtou do nada, porra.}','a'),
+  D('olivia','Conta. E quando te perguntarem, torce pra ninguém ter print.','d'),
   {hide:'arthur'},{fade:'olivia',lvl:0},{show:'lara',ex:'h',pos:'right'},
   N('Ela vem andando até vocês. A cada passo, um pouco mais inteira.'),
   N('Na segunda-feira, ele tentou a versão dele: "ela surtou, tá maluca". Durou meia manhã.'),
@@ -1706,7 +1711,7 @@ c3_6: [
   D('sofia','Brincadeira a gente ri junto, Matheus. Eu nunca ri.','d'),
   N('Ele abre a boca. Fecha. Pela primeira vez desde que você o conhece, ele não tem resposta pronta.'),
   D('matheus','…Eu estraguei tudo, né?','s'),
-  D('sofia','Você trocou a minha confiança por obediência. Agora vai saber quanto custa.','d'),
+  D('sofia','Você trocou a minha confiança por obediência. {s:Agora vai saber quanto custa.|Agora aguenta, porque a conta é sua.}','d'),
   N('Ela desce a escada até você. Ele fica lá em cima, sozinho com a frase.'),
   N('Talvez ele aprenda. Talvez vire gente. Mas isso é problema dele agora — não dela.'),
   {voz:true},
@@ -1886,7 +1891,7 @@ c4_6: [
   D('celine','Não é brincadeira. E eu não vou mais rir.','d'),
   D('celine','E dessa vez tem testemunha. E registro. Datas, horários, prints do grupo, os bilhetes em letra de forma. Tudo.','d'),
   N('Você não disse uma palavra. Não precisou. Estar ali, do lado dela, já era a frase inteira.'),
-  D('davi','…Vocês dois vão se dar mal nesse prédio.','x'),
+  D('davi','…{s:Vocês dois vão se dar mal nesse prédio.|Vocês dois vão se foder nesse prédio.}','x'),
   D('celine','Anota essa também, {nome}.','d'),
   N('Você anota. Data, hora, frase. O medo dele agora tem cartório.'),
   {hide:'davi'},
@@ -2028,14 +2033,14 @@ async function doCredits(){
 }
 
 /* ---------------- Telas ---------------- */
-function titleBG(){ __bg++; return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice">${DEFS(CEU('#ff9f5a','#ffc98a','#ffe8c2'))}<rect width="${W}" height="${H}" fill="url(#ceu${__bg})"/><circle cx="1180" cy="250" r="95" fill="#ffd76b"/><circle cx="1180" cy="250" r="150" fill="#ffd76b" opacity=".3"/><g class="tnuvem">${nuvens(.55)}</g><g class="tnuvem2" opacity=".5">${nuvens(.4)}</g><g class="tpipa">${pipa(1080,300,'#ef476f',1.1)}</g><g class="tpipa2">${pipa(380,220,'#118ab2',.8)}</g>${morro(330,'#ffe0bc')}${poste(520,260)}${fios(288)}<rect y="620" width="${W}" height="280" fill="#8fae7e"/>${calcada(602,38)}${casinha(1080,'#e8b4c8',215)}${casinha(1350,'#9ec5e8',245)}${ipe(1480,668,'#ffd23f',1.15)}${ipe(940,650,'#c77dff',.9)}<path d="M700 320 q10 -12 20 0 M770 296 q9 -11 18 0" stroke="#5a4a3a" stroke-width="3" fill="none"/>${VIN()}</svg>`; }
+function titleBG(){ return `<img class="bgimg" src="lug/l08.webp" alt="">`; }
 function showTitle(){
   $('#textbox').classList.remove('on'); hide('all');
   $('#endChap').classList.remove('on');
   $('#title').classList.add('on');
   if(!$('#titleBg').firstChild) $('#titleBg').innerHTML=titleBG();
   $('#ver').textContent='v'+VERSION+' · roteiro, arte e testes: a equipe';
-  $('#titleGirls').innerHTML=[['celine','celine1'],['sofia','sofia1'],['olivia','olivia3'],['isis','isis1']].map(([k,f])=>`<div class="tg"><img src="${SPRD}${f}.webp" alt=""></div>`).join('');
+  $('#titleGirls').innerHTML=['sofia1','isis1','olivia1'].map(f=>`<div class="tg"><img src="${SPRD}${f}.webp" alt=""></div>`).join('');
   $('#mCont').disabled=!(S.name && S.cur);
   $('#mNew').textContent = (S.name && (S.cur||Object.keys(S.done).length)) ? 'Começar de novo' : 'Começar';
   audioInit(); music(true);
