@@ -34,11 +34,11 @@
   #bg svg,#bg2 svg{width:100%;height:100%;display:block}
   #bg2{opacity:0;pointer-events:none}
   #sprites{position:absolute;inset:0;pointer-events:none}
-  .sprite{position:absolute;bottom:0;width:var(--sw);aspect-ratio:200/320;transition:opacity .4s,transform .4s,filter .8s;opacity:0;transform:translateY(20px)}
-  .sprite.on{opacity:1;transform:translateY(0)}
-  .sprite svg{width:100%;height:100%;display:block;filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}
-  .sprite img{width:100%;height:100%;object-fit:contain;object-position:bottom center;display:block;filter:drop-shadow(0 6px 10px rgba(0,0,0,.3));-webkit-user-drag:none}
-  .sprite.left{left:5%}.sprite.center{left:50%;margin-left:calc(var(--sw)/-2)}.sprite.right{right:5%}
+  :root{--sh:min(88vh,860px)}
+  .sprite{position:absolute;bottom:-16px;height:var(--sh);transition:opacity .45s,bottom .55s cubic-bezier(.2,.8,.2,1),filter .8s;opacity:0}
+  .sprite.on{opacity:1;bottom:0}
+  .sprite svg,.sprite img{height:100%;width:auto;max-width:46vw;object-fit:contain;object-position:bottom;display:block;filter:drop-shadow(0 8px 14px rgba(0,0,0,.35));-webkit-user-drag:none}
+  .sprite.left{left:1%}.sprite.center{left:50%;transform:translateX(-50%)}.sprite.right{right:1%}
   .sprite.dim{filter:brightness(.6)}
   .sprite.fade1{filter:saturate(.45) brightness(.96)}
   .sprite.fade2{filter:saturate(.08) brightness(.9) contrast(.95)}
@@ -274,8 +274,9 @@
   #nametag{top:-17px;background:var(--spk,#3d4f7c);border-radius:999px;padding:4px 17px;font-size:12.5px;box-shadow:0 4px 14px rgba(0,0,0,.45),inset 0 1px 0 #ffffff36}
   #next{color:#e9a0bd}
   /* personagens: quem fala vive, quem ouve recua */
-  .sprite{transition:opacity .45s,transform .65s cubic-bezier(.2,.8,.2,1),filter .55s}
-  .sprite.talk{transform:translateY(-7px) scale(1.028)}
+  .sprite.talk{filter:drop-shadow(0 10px 18px rgba(0,0,0,.45)) brightness(1.06)}
+  .sprite.left.talk,.sprite.right.talk{transform:scale(1.03)}
+  .sprite.center.talk{transform:translateX(-50%) scale(1.03)}
   .sprite.dim{filter:brightness(.52) saturate(.8) blur(.4px)}
   .sprite.dim.fade1{filter:saturate(.4) brightness(.5) blur(.4px)}
   .sprite.dim.fade2{filter:saturate(.08) brightness(.48) blur(.4px)}
@@ -353,9 +354,7 @@
   /* aviso inicial com marca */
   #warn .sino{width:74px;height:74px;margin-bottom:4px;animation:wber 2.8s ease-in-out infinite}
   @keyframes wber{0%,100%{transform:rotate(0)}6%{transform:rotate(-10deg)}12%{transform:rotate(8deg)}18%{transform:rotate(-5deg)}24%{transform:rotate(0)}}
-  /* iPhones antigos sem suporte a aspect-ratio */
   @supports not (aspect-ratio: 1/1){
-    .sprite{height:calc(var(--sw)*1.6)}
     #titleGirls .tg{width:calc(min(76vh,44vw)*0.625)}
   }
   @media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
