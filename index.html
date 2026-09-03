@@ -625,7 +625,7 @@ function pickImg(k,ex,lvl){
   const e=SPR[k]; if(!e) return null;
   const isUni=UNI_BGS.has(curBGkey);
   let v;
-  if(k==='olivia'){ v = isUni ? (lvl>=1? e.uni : e.uniBrinco) : (lvl>=2? e.casualDark : e.casual); }
+  if(k==='olivia'){ v = isUni ? (lvl>=1? e.uniBrinco : e.uni) : (lvl>=2? e.casualDark : e.casual); }
   else v = isUni ? (e.uni||e.casual) : (e.casual||e.uni);
   const base=(e.casual||e.uni||{});
   const file=(v&&(v[ex]||v.n))||base[ex]||base.n;
@@ -894,7 +894,7 @@ $('#btnMute').onclick=()=>{ muted=!muted; $('#btnMute').textContent=muted?'🔇'
 /* ---------------- Render ---------------- */
 const sprites={};
 /* cenários desenhados pela equipe (lug/) — fallback: gerados por código */
-const BGIMG={ predio:'l03', cozinha:'l05', rua:'l06', cantina:'l07', praca:'l08', portao:'l09', escada:'l10', patio:'l11', quartoIsis:'l13', corredor:'l14', hall:'l16', festa:'l02' };
+const BGIMG={ predio:'l03', cozinha:'l05', rua:'l06', cantina:'l07', lanchonete:'l07', praca:'l08', feira:'l01', portao:'l09', escada:'l10', patio:'l11', quartoIsis:'l13', corredor:'l14', corredorPredio:'l15', hall:'l16', festa:'l02' };
 function bgHTML(key,arg){
   let f=BGIMG[key];
   if(key==='salaCeline') f = arg ? 'l04' : 'l12';
@@ -912,7 +912,7 @@ function setBG(key,arg){ curBGkey=key; const html=bgHTML(key,arg);
   if(src){ const pre=new Image(); pre.src=src; if(pre.decode){ pre.decode().then(apply).catch(apply); } else if(pre.complete){ apply(); } else { pre.onload=apply; pre.onerror=apply; } }
   else apply();
 }
-BG.rua=()=>BG.praca(); BG.portao=()=>BG.patio();
+BG.rua=()=>BG.praca(); BG.portao=()=>BG.patio(); BG.feira=()=>BG.praca(); BG.corredorPredio=()=>BG.predio();
 let seqN=0;
 const LAYOUTS={1:[50],2:[27,73],3:[19,50,81],4:[14,38,62,86],5:[11,30.5,50,69.5,89]};
 function relayout(){
@@ -1717,7 +1717,7 @@ c3_6: [
 c4_0: [
   {save:'c4_0'},
   {day:'Domingo de manhã — a feira'},
-  {bg:'praca'},
+  {bg:'feira'},
   N('A Celine bateu na sua porta às oito da manhã de um domingo. "Feira. Agora. É lei."'),
   {show:'celine',ex:'h',pos:'center'},
   D('celine','Regras da feira: pastel primeiro, caldo de cana junto, e a barraca do fim é sempre mais barata. Anota.','h'),
@@ -1732,7 +1732,7 @@ c4_0: [
 ],
 c4_05: [
   {day:'Durante a semana — o prédio'},
-  {bg:'hall'},
+  {bg:'corredorPredio'},
   N('A semana passa nas pequenas coisas do prédio. Você já conhece a rotina: o elevador que treme no terceiro, o cheiro de bolo da Paula às quartas.'),
   {show:'paula',ex:'h',pos:'left'},{show:'celine',ex:'h',pos:'right'},
   D('paula','Vocês viram o capítulo de ontem? EU GRITEI. A vilã ouviu TUDO atrás da porta.','h'),
